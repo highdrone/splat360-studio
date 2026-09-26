@@ -132,7 +132,7 @@ class SfmSettings(BaseModel):
         description="Also match every Nth keyframe against every other Nth keyframe for loop closure. 0 disables.",
     )
     max_features: int = Field(8192, ge=1024, le=32768)
-    guided_matching: bool = True
+    guided_matching: bool = Field(False, description="Second matching pass guided by epipolar geometry; more matches, roughly 2x slower.")
     min_registered_fraction: float = Field(
         0.6, ge=0, le=1,
         description="Fail the job if fewer than this fraction of views register.",

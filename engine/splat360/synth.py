@@ -92,8 +92,10 @@ class Room:
         # Each face: plane point p0, normal n (pointing into the room), axes (u, v) with extents, texture.
         # Texture coordinate = ((x - p0)·u / len_u, (x - p0)·v / len_v).
         self.faces: dict[str, dict] = {
-            "floor": dict(p0=np.array([-hw, y_floor, -hd]), n=np.array([0, -1.0, 0]),
-                          u=np.array([1.0, 0, 0]), v=np.array([0, 0, 1.0]), lu=spec.width_m, lv=spec.depth_m, hue=20),
+            # Texture axes are chosen so that u x v points away from the viewer (into the surface);
+            # otherwise tags would appear mirrored and could not be decoded.
+            "floor": dict(p0=np.array([-hw, y_floor, hd]), n=np.array([0, -1.0, 0]),
+                          u=np.array([1.0, 0, 0]), v=np.array([0, 0, -1.0]), lu=spec.width_m, lv=spec.depth_m, hue=20),
             "ceiling": dict(p0=np.array([-hw, y_ceil, -hd]), n=np.array([0, 1.0, 0]),
                             u=np.array([1.0, 0, 0]), v=np.array([0, 0, 1.0]), lu=spec.width_m, lv=spec.depth_m, hue=100),
             "wall_front": dict(p0=np.array([-hw, y_ceil, hd]), n=np.array([0, 0, -1.0]),
