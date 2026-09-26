@@ -112,8 +112,9 @@ class TagSettings(BaseModel):
     enabled: bool = True
     family: str = Field("tag36h11", description="AprilTag family used when printing.")
     size_mm: float = Field(
-        200.0, gt=10, le=2000,
-        description="Printed size of the black square edge in millimetres (as labelled on the sheet).",
+        130.0, gt=10, le=2000,
+        description="Printed size of the black square edge in millimetres (as labelled on the sheet). "
+                    "130 mm is the largest tag36h11 that fits on Letter/A4; use 200 mm on Tabloid/A3.",
     )
     placement: Literal["floor", "wall", "mixed"] = Field(
         "floor",
@@ -443,7 +444,7 @@ class TagSheetRequest(BaseModel):
     ids: Optional[list[int]] = Field(None, description="Explicit ids. If omitted, uses first_id..first_id+count-1.")
     first_id: int = Field(0, ge=0)
     count: int = Field(12, ge=1, le=200)
-    tag_size_mm: float = Field(200.0, gt=10, le=2000, description="Black square edge length as printed.")
+    tag_size_mm: float = Field(130.0, gt=10, le=2000, description="Black square edge length as printed.")
     page: Literal["letter", "a4", "tabloid", "a3", "a2", "a1", "a0"] = "letter"
     orientation: Literal["portrait", "landscape"] = "portrait"
     margin_mm: float = Field(10.0, ge=0, le=50)
@@ -458,7 +459,9 @@ class TagPlanRequest(BaseModel):
     scene: Literal["room", "multi_room", "outdoor", "object"] = "room"
     walk_length_m: float = Field(20.0, gt=1, le=1000)
     ceiling_height_m: float = Field(2.7, gt=1, le=30)
-    printer_max_mm: float = Field(279.0, gt=50, le=2000, description="Largest printable edge on your printer.")
+    printer_max_mm: float = Field(216.0, gt=50, le=2000,
+                                  description="Shorter edge of the largest paper your printer takes "
+                                              "(Letter 216, A4 210, Tabloid 279, A3 297). Tags are square, so this is the limit.")
 
 
 class TagPlan(BaseModel):
@@ -466,6 +469,7 @@ class TagPlan(BaseModel):
     recommended_size_mm: float
     family: str
     page: str
+    orientation: Literal["portrait", "landscape"] = "portrait"
     spacing_m: float
     max_view_distance_m: float
     placement_tips: list[str]
