@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, QrCode } from 'lucide-react';
 import type { ExportFormat, PipelineSettings, TagFamilyInfo } from '@/api/types';
@@ -141,6 +141,18 @@ export function SettingsForm({ value, onChange, disabled, families, showTagBanne
   const errors = useMemo(() => validateSettings(value), [value]);
   const [extraArgsText, setExtraArgsText] = useState(value.train.extra_args.join(' '));
   const [idsText, setIdsText] = useState(value.tags.ids ? value.tags.ids.join(', ') : '');
+  // Resync the free-text fields when the value changes from outside (preset, revert) without clobbering in-progress typing.
+  useEffect(() => {
+    const parsed = idsText.split(/[\s,;]+/).filter(Boolean).map((p) => parseInt(p, 10));
+    const current = value.tags.ids ?? [];
+    if (parsed.join(',') !== current.join(',') || (!value.tags.ids && idsText.trim() !== '' && parsed.every(Number.isNaN))) setIdsText(current.join(', '));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value.tags.ids]);
+  useEffect(() => {
+    const parsed = extraArgsText.split(/\s+/).filter(Boolean);
+    if (parsed.join(' ') !== value.train.extra_args.join(' ')) setExtraArgsText(value.train.extra_args.join(' '));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value.train.extra_args]);
   const set = (path: string, v: unknown) => onChange(setPath(value, path, v));
   const has = (g: GroupId) => groups.includes(g);
 

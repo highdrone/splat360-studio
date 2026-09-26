@@ -85,6 +85,8 @@ export function disposeObject(obj: THREE.Object3D): void {
 }
 
 /** Camera position ~4 m from the origin, slightly above the floor (+Y is down). */
-export const DEFAULT_CAMERA_POS: [number, number, number] = [0, -1.2, 4];
-export const DEFAULT_LOOK_AT: [number, number, number] = [0, 0, 0];
+// After alignment the trajectory is centred at x = z = 0, the floor is at y = 0 (+Y down) and the
+// first keyframe looks along +Z, so this starts the viewer at eye height where the walk began.
+export const DEFAULT_CAMERA_POS: [number, number, number] = [0, -1.5, -1.0];
+export const DEFAULT_LOOK_AT: [number, number, number] = [0, -1.3, 2.0];
 export const CAMERA_UP: [number, number, number] = [0, -1, 0];

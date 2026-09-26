@@ -44,6 +44,12 @@ export function FootageTab({ ctx }: { ctx: ProjectCtx }) {
   const LIMIT = 120;
   const views = useAsync((signal) => api.views(project.id, offset, LIMIT, signal), [project.id, offset, generation]);
   const [lightbox, setLightbox] = useState<string | null>(null);
+  useEffect(() => {
+    if (!lightbox) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setLightbox(null);
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [lightbox]);
 
   const setSourcePath = async (path: string) => {
     setBusy(true);
@@ -191,7 +197,7 @@ export function FootageTab({ ctx }: { ctx: ProjectCtx }) {
       </Panel>
 
       {lightbox && (
-        <div className="fixed inset-0 z-50 bg-black/85 p-6 grid place-items-center" onClick={() => setLightbox(null)} onKeyDown={(e) => e.key === 'Escape' && setLightbox(null)} role="dialog" aria-label="Image preview" tabIndex={-1}>
+        <div className="fixed inset-0 z-50 bg-black/85 p-6 grid place-items-center" onClick={() => setLightbox(null)} role="dialog" aria-label="Image preview">
           <img src={lightbox} alt="" className="max-h-full max-w-full rounded shadow-2xl" />
         </div>
       )}

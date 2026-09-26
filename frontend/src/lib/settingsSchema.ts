@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: PipelineSettings = {
   tags: {
     enabled: true,
     family: 'tag36h11',
-    size_mm: 200,
+    size_mm: 130,
     placement: 'floor',
     min_decision_margin: 30,
     ids: null,

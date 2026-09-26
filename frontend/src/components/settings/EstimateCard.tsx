@@ -13,7 +13,7 @@ export function EstimateCard({ settings, probe }: { settings: PipelineSettings; 
         <Stat label="Keyframes" value={formatNumber(e.keyframes)} hint={e.clipSeconds != null ? `from ${formatDuration(e.clipSeconds)} of footage` : 'whole clip'} />
         <Stat label="Pinhole views" value={formatNumber(e.views)} hint={`${e.keyframes} × ${e.viewsPerFrame} (${settings.views.layout})`} />
         <Stat label="Disk for images" value={`≈ ${formatBytes(e.totalBytes, 1)}`} hint={`${formatBytes(e.keyframeBytes, 0)} keyframes + ${formatBytes(e.viewBytes, 0)} views`} />
-        <Stat label="Training" value={`${formatNumber(settings.train.iterations)} it`} hint={`roughly ${hours < 1 ? `${Math.max(5, Math.round(hours * 60))} min` : `${hours.toFixed(1)} h`} on Apple Silicon`} />
+        <Stat label="Training" value={`${formatNumber(settings.train.iterations)} it`} hint={`roughly ${hours < 1 ? `${Math.max(5, Math.round(hours * 60))} min` : `${hours.toFixed(1)} h`} on a laptop GPU`} />
       </div>
       <p className="help mt-2">Rough figures: image sizes depend on scene texture, and the SfM stage scales with views² inside the matching window.</p>
     </div>

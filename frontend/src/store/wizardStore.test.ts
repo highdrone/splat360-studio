@@ -19,7 +19,7 @@ describe('wizard store', () => {
     const d = DEFAULT_SETTINGS;
     expect(d.keyframes).toMatchObject({ target_count: 200, blur_reject_fraction: 0.25, image_format: 'jpg', jpeg_quality: 95, start_s: null, end_s: null });
     expect(d.views).toMatchObject({ layout: 'cube6', fov_deg: 100, size_px: 1600, nadir_mask: { enabled: true, radius_deg: 30 } });
-    expect(d.tags).toMatchObject({ enabled: true, family: 'tag36h11', size_mm: 200, placement: 'floor', min_decision_margin: 30, ids: null });
+    expect(d.tags).toMatchObject({ enabled: true, family: 'tag36h11', size_mm: 130, placement: 'floor', min_decision_margin: 30, ids: null });
     expect(d.sfm).toMatchObject({ engine: 'colmap', use_rig: true, window: 6, loop_stride: 10, max_features: 8192, guided_matching: false, min_registered_fraction: 0.6, threads: -1, use_gpu: false });
     expect(d.train).toMatchObject({ backend: 'auto', iterations: 30000, max_resolution: 1600, sh_degree: 3, max_splats: 3_000_000, checkpoint_every: 5000, extra_args: [] });
     expect(d.export).toEqual({ formats: ['ply', 'splat'], keep_intermediates: true });

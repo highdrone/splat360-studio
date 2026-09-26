@@ -164,30 +164,27 @@ export function SplatViewer({ projectId, artifacts, reloadKey = 0, className = '
       const v = viewer;
       if (gsRef.current === v) gsRef.current = null;
       if (v) {
-        const dispose = () => {
-          try {
-            const r = v.dispose();
-            if (r && typeof (r as Promise<void>).catch === 'function') (r as Promise<void>).catch(() => undefined);
-          } catch {
-            /* the library throws when disposing mid-load; retry shortly */
-            setTimeout(() => {
-              try {
-                v.dispose().catch(() => undefined);
-              } catch {
-                /* give up quietly */
-              }
-            }, 250);
-          }
-        };
+        // dispose() removes the canvas and frees the GL context itself. It ends by
+        // detaching rootElement from document.body, which rejects for a nested root;
+        // that is expected and harmless, so the rejection is swallowed.
+        const canvasEl = v.renderer?.domElement ?? null;
         try {
           v.stop();
         } catch {
           /* ignore */
         }
-        dispose();
+        let p: Promise<void> | null = null;
+        try {
+          p = v.dispose();
+        } catch {
+          p = null;
+        }
+        const finish = () => {
+          if (canvasEl && canvasEl.parentNode === host) host.removeChild(canvasEl);
+        };
+        if (p && typeof p.then === 'function') p.then(finish, finish);
+        else finish();
       }
-      // Remove any stray canvas / overlay the library left in the host.
-      while (host.firstChild) host.removeChild(host.firstChild);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId, sourceKey]);

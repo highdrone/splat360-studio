@@ -11,7 +11,7 @@ export function DoctorPage() {
     ? r.ready
       ? { kind: 'success' as const, title: 'Ready', text: 'Every required tool was found. You can reconstruct and train.' }
       : r.can_reconstruct && !r.can_train
-        ? { kind: 'warning' as const, title: 'Can reconstruct, cannot train', text: 'ffmpeg and COLMAP work, but no Gaussian splat trainer (brush or OpenSplat) was found. Runs will stop after alignment; install a trainer to produce splats.' }
+        ? { kind: 'warning' as const, title: 'Can reconstruct, cannot train', text: 'ffmpeg and COLMAP work, but no Gaussian splat trainer (brush or OpenSplat) was found. Runs still complete, but the viewer shows a point-cloud preview instead of a trained splat; install Brush to produce real splats.' }
         : { kind: 'error' as const, title: 'Missing required tools', text: 'Install the missing tools below, then re-check. The pipeline refuses to start without them.' }
     : null;
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDown, Play, Square } from 'lucide-react';
 import { STAGE_LABELS, STAGE_ORDER, type StageName } from '@/api/types';
 import { api } from '@/api/endpoints';
@@ -13,6 +13,15 @@ export function PipelineTab({ ctx }: { ctx: ProjectCtx }) {
   const { project, job, stream, jobActive, onRun, onCancel, busy } = ctx;
   const now = useNow(1000);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [menuOpen]);
   const stages = job?.stages?.length ? job.stages : project.stages;
   const elapsed = job ? elapsedSeconds(job.started_at ?? job.created_at, job.finished_at, now) : null;
   const canRun = !!project.source && !jobActive && !busy;
@@ -28,7 +37,7 @@ export function PipelineTab({ ctx }: { ctx: ProjectCtx }) {
         <Panel
           title="Stages"
           actions={
-            <div className="flex items-center gap-1 relative">
+            <div ref={menuRef} className="flex items-center gap-1 relative">
               {jobActive ? (
                 <button type="button" className="btn-danger btn-sm" onClick={onCancel} disabled={busy}>
                   {busy ? <Spinner className="h-3 w-3 animate-spin" /> : <Square className="h-3 w-3" />} Cancel

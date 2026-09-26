@@ -6,7 +6,7 @@ use the Pydantic models in `engine/splat360/models.py`; that file is the source
 of truth for every shape below. TypeScript types in
 `frontend/src/api/types.ts` mirror it field-for-field.
 
-Base URL: `http://127.0.0.1:<port>` (default port 8765). The desktop shell picks
+Base URL: `http://127.0.0.1:<port>` (default port 8765). The UI uses hash routes (`/#/projects/<id>`) so the same build works from disk in the desktop shell and when served by the engine at `/`. The desktop shell picks
 a free port and passes it to the UI as `window.splat360.apiBase`; in the browser
 the UI uses the same origin.
 
@@ -86,7 +86,8 @@ events for every job (used by the dashboard).
 | GET | `/api/tags/{family}/{id}.png?px=600` | | PNG of a single tag with quiet zone. |
 | GET | `/api/tags/{family}/{id}.svg?size_mm=200` | | Vector SVG at physical size (for large-format printing). |
 | POST | `/api/tags/sheet` | `TagSheetRequest` | `application/pdf`. One tag per page when the tag is larger than half the page; otherwise a grid. Every tag carries an id label, family, size, project name, and crop marks. Page 1 is a placement guide (optional). A 100 mm scale bar lets the user verify print scale. |
-| POST | `/api/tags/plan` | `TagPlanRequest` | `TagPlan` — recommended count, size and spacing. |
+| POST | `/api/tags/sheet/layout` | `TagSheetRequest` | `{fits, message, pages, tag_pages, guide_pages, tags_per_page, cell_mm, tag_outer_mm, grid:[cols,rows], largest_fit_mm, mode, page_mm, quiet_cells}` — preview of the sheet layout without rendering; `fits:false` explains why and the largest size that fits. |
+| POST | `/api/tags/plan` | `TagPlanRequest` | `TagPlan` — recommended count, size, page and spacing. |
 
 ## Demo
 

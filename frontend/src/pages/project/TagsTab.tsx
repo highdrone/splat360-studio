@@ -112,7 +112,7 @@ export function TagsTab({ ctx }: { ctx: ProjectCtx }) {
                 <li key={`${o.view}-${o.tag_id}-${i}`} className="rounded border border-line overflow-hidden bg-panel2">
                   <div className="relative aspect-square">
                     <img src={apiUrl(`/api/projects/${encodeURIComponent(project.id)}/views/${o.view}`)} alt={`View ${o.view}`} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
-                    <TagOutline corners={o.corners} />
+                    <TagOutline corners={o.corners} size={project.settings.views.size_px} />
                   </div>
                   <div className="p-1.5 text-2xs font-mono text-muted leading-4">
                     <div className="text-ink">tag {o.tag_id}</div>
@@ -134,13 +134,8 @@ export function TagsTab({ ctx }: { ctx: ProjectCtx }) {
 }
 
 /** Draw the tag quad on top of the view thumbnail in normalised coordinates. */
-function TagOutline({ corners }: { corners: number[][] }) {
-  if (!corners || corners.length !== 4) return null;
-  const xs = corners.map((c) => c[0]);
-  const ys = corners.map((c) => c[1]);
-  const max = Math.max(...xs, ...ys);
-  // Corners are in view pixels; the view is square so normalise by the largest coordinate's power-of-two bound.
-  const size = max <= 1 ? 1 : max <= 512 ? 512 : max <= 1024 ? 1024 : max <= 1600 ? 1600 : max <= 2048 ? 2048 : 3072;
+function TagOutline({ corners, size }: { corners: number[][]; size: number }) {
+  if (!corners || corners.length !== 4 || !(size > 0)) return null;
   const pts = corners.map(([x, y]) => `${(x / size) * 100},${(y / size) * 100}`).join(' ');
   return (
     <svg className="absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>

@@ -444,9 +444,18 @@ def create_app(store: ProjectStore | None = None, manager: JobManager | None = N
 
         @app.get("/{path:path}", include_in_schema=False)
         def spa(path: str):
+            # The UI is built with relative asset URLs (so the desktop shell can open it from disk),
+            # so a nested route like /projects/x/viewer requests /projects/x/assets/app.js.
+            if "assets/" in path:
+                f = fe / "assets" / Path(path).name
+                if f.is_file():
+                    return FileResponse(str(f))
+                raise HTTPException(404, "asset not found")
             f = fe / path
-            if path and f.is_file():
+            if path and f.is_file() and ".." not in path:
                 return FileResponse(str(f))
+            if path.startswith("api/"):
+                raise HTTPException(404, "not found")
             return HTMLResponse((fe / "index.html").read_text())
 
     return app

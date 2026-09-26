@@ -39,7 +39,7 @@ class PointCloudTrainer(Trainer):
         if n > 1:
             centre = xyz.mean(axis=0)
             extent = np.percentile(np.linalg.norm(xyz - centre, axis=1), 90)
-            radius = float(extent / max(30.0, n ** (1 / 3) * 4))
+            radius = float(extent / max(60.0, n ** (1 / 3) * 8))
         else:
             radius = 0.01
         f_dc = (rgb - 0.5) / SH_C0

@@ -10,7 +10,7 @@ import { bridge, downloadBlob, isDesktop } from '@/lib/desktop';
 import { toast } from '@/store/uiStore';
 import { Field, Note, NumberInput, PageHeader, Panel, Skeleton, Spinner, Toggle, cx } from '@/components/ui';
 
-const DEFAULT_PLAN: TagPlanRequest = { area_m2: 50, scene: 'room', walk_length_m: 20, ceiling_height_m: 2.7, printer_max_mm: 279 };
+const DEFAULT_PLAN: TagPlanRequest = { area_m2: 50, scene: 'room', walk_length_m: 20, ceiling_height_m: 2.7, printer_max_mm: 216 };
 
 export function TagPrinterPage() {
   const [params] = useSearchParams();
@@ -173,8 +173,8 @@ export function TagPrinterPage() {
                   }}
                 />
               </Field>
-              <Field label="Tag size (mm, black square edge)" help="200 mm for rooms, 300+ mm for halls and outdoors. Must match the project settings." error={errors.tag_size_mm} htmlFor="size">
-                <NumberInput id="size" value={req.tag_size_mm} min={11} max={2000} step={5} onChange={(v) => set('tag_size_mm', v ?? 200)} />
+              <Field label="Tag size (mm, black square edge)" help="130 mm is the largest that fits Letter/A4; 170 mm fits Tabloid, 180 mm A3. Larger tags are seen from further away. Must match the project settings." error={errors.tag_size_mm} htmlFor="size">
+                <NumberInput id="size" value={req.tag_size_mm} min={11} max={2000} step={5} onChange={(v) => set("tag_size_mm", v ?? 130)} />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Page" htmlFor="page">
@@ -228,7 +228,7 @@ export function TagPrinterPage() {
                 <NumberInput id="ceil" value={plan.ceiling_height_m} min={1.1} max={30} step={0.1} onChange={(v) => setPlan({ ...plan, ceiling_height_m: v ?? 2.7 })} />
               </Field>
               <Field label="Printer max edge (mm)" htmlFor="pmax" help="279 for Letter, 297 for A4, 420 for A3.">
-                <NumberInput id="pmax" value={plan.printer_max_mm} min={51} max={2000} step={1} onChange={(v) => setPlan({ ...plan, printer_max_mm: v ?? 279 })} />
+                <NumberInput id="pmax" value={plan.printer_max_mm} min={51} max={2000} step={1} onChange={(v) => setPlan({ ...plan, printer_max_mm: v ?? 216 })} />
               </Field>
               <div className="flex items-end">
                 <button type="button" className="btn-secondary w-full justify-center" onClick={runPlan} disabled={planBusy}>

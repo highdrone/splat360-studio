@@ -51,6 +51,6 @@ describe('sheet helpers', () => {
   });
   it('builds a safe filename', () => {
     expect(suggestedFilename({ ...DEFAULT_SHEET, project_name: 'Living room / v2', tag_size_mm: 200.4 })).toBe('Living_room_v2_tag36h11_200mm.pdf');
-    expect(suggestedFilename(DEFAULT_SHEET)).toBe('apriltags_tag36h11_200mm.pdf');
+    expect(suggestedFilename(DEFAULT_SHEET)).toBe('apriltags_tag36h11_130mm.pdf');
   });
 });

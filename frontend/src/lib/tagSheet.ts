@@ -20,7 +20,7 @@ export const DEFAULT_SHEET: TagSheetRequest = {
   ids: null,
   first_id: 0,
   count: 12,
-  tag_size_mm: 200,
+  tag_size_mm: 130,
   page: 'letter',
   orientation: 'portrait',
   margin_mm: 10,
