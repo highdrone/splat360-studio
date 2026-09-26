@@ -34,7 +34,7 @@ export const DEFAULT_SETTINGS: PipelineSettings = {
     window: 6,
     loop_stride: 10,
     max_features: 8192,
-    guided_matching: true,
+    guided_matching: false,
     min_registered_fraction: 0.6,
     threads: -1,
     use_gpu: false,

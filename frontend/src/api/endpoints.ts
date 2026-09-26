@@ -23,6 +23,7 @@ import type {
   TagObservation,
   TagPlan,
   TagPlanRequest,
+  TagSheetLayout,
   TagSheetRequest,
   TagSummary,
   ViewList,
@@ -84,6 +85,8 @@ export const api = {
     apiUrl(`/api/tags/${enc(family)}/${id}.svg`, { size_mm: sizeMm }),
   tagSheet: (body: TagSheetRequest, signal?: AbortSignal) =>
     requestBlob('/api/tags/sheet', { method: 'POST', body, signal }),
+  tagSheetLayout: (body: TagSheetRequest, signal?: AbortSignal) =>
+    request<TagSheetLayout>('/api/tags/sheet/layout', { method: 'POST', body, signal }),
   tagPlan: (body: TagPlanRequest, signal?: AbortSignal) =>
     request<TagPlan>('/api/tags/plan', { method: 'POST', body, signal }),
 

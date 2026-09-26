@@ -293,3 +293,96 @@ export function Disclosure({ title, open, onToggle, children, summary }: { title
     </div>
   );
 }
+
+export function Skeleton({ className = '' }: { className?: string }) {
+  return <div className={cx('animate-pulse rounded bg-line/60', className)} aria-hidden />;
+}
+
+export function SkeletonRows({ rows = 3, className = '' }: { rows?: number; className?: string }) {
+  return (
+    <div className={cx('space-y-2', className)} role="status" aria-label="Loading">
+      {Array.from({ length: rows }).map((_, i) => (
+        <Skeleton key={i} className={cx('h-4', i % 3 === 0 ? 'w-3/4' : i % 3 === 1 ? 'w-full' : 'w-1/2')} />
+      ))}
+    </div>
+  );
+}
+
+export function PageHeader({ title, subtitle, actions, back }: { title: ReactNode; subtitle?: ReactNode; actions?: ReactNode; back?: ReactNode }) {
+  return (
+    <header className="mb-5 flex flex-wrap items-start justify-between gap-3">
+      <div className="min-w-0">
+        {back && <div className="mb-1 text-xs">{back}</div>}
+        <h1 className="text-lg font-semibold leading-6 truncate">{title}</h1>
+        {subtitle && <div className="text-xs text-muted mt-0.5">{subtitle}</div>}
+      </div>
+      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+    </header>
+  );
+}
+
+export function NumberInput({
+  id,
+  value,
+  onChange,
+  min,
+  max,
+  step,
+  disabled,
+  nullable = false,
+  placeholder,
+  className = '',
+}: {
+  id?: string;
+  value: number | null;
+  onChange: (v: number | null) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+  disabled?: boolean;
+  nullable?: boolean;
+  placeholder?: string;
+  className?: string;
+}) {
+  const [text, setText] = useState(value == null ? '' : String(value));
+  const lastValue = useRef(value);
+  useEffect(() => {
+    if (lastValue.current !== value) {
+      lastValue.current = value;
+      setText(value == null ? '' : String(value));
+    }
+  }, [value]);
+  return (
+    <input
+      id={id}
+      type="number"
+      inputMode="decimal"
+      className={cx('input', className)}
+      value={text}
+      min={min}
+      max={max}
+      step={step}
+      disabled={disabled}
+      placeholder={placeholder}
+      onChange={(e) => {
+        const t = e.target.value;
+        setText(t);
+        if (t.trim() === '') {
+          if (nullable) {
+            lastValue.current = null;
+            onChange(null);
+          }
+          return;
+        }
+        const n = Number(t);
+        if (Number.isFinite(n)) {
+          lastValue.current = n;
+          onChange(n);
+        }
+      }}
+      onBlur={() => {
+        if (text.trim() === '' && !nullable) setText(value == null ? '' : String(value));
+      }}
+    />
+  );
+}

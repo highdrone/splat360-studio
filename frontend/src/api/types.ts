@@ -425,6 +425,23 @@ export interface TagSheetRequest {
   project_name?: string | null;
 }
 
+/** Response of POST /api/tags/sheet/layout (not in API.md; see engine tags/sheet.py::sheet_layout). */
+export interface TagSheetLayout {
+  pages: number;
+  tag_pages?: number;
+  guide_pages?: number;
+  tags_per_page: number;
+  cell_mm: number;
+  tag_outer_mm: number;
+  grid: [number, number]; // [cols, rows]
+  largest_fit_mm: number;
+  fits?: boolean;
+  mode?: string;
+  page_mm?: [number, number];
+  quiet_cells?: number;
+  message?: string | null;
+}
+
 export type SceneKind = 'room' | 'multi_room' | 'outdoor' | 'object';
 
 export interface TagPlanRequest {
