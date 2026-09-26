@@ -46,8 +46,7 @@ class BrushTrainer(Trainer):
             "--export-name", "checkpoint_{iter}.ply",
             "--eval-every", str(max(1000, every)),
         ]
-        if Path(exe).name in ("brush", "brush_app"):
-            cmd += ["--with-viewer", "false"]
+        # The `brush` GUI binary trains headless when a source path is given (viewer defaults off).
         cmd += list(settings.extra_args)
         log("$ " + " ".join(cmd))
         t0 = time.time()
