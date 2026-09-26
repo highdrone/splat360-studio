@@ -62,9 +62,10 @@ export PATH="$DATA_DIR/bin:$HOME/.cargo/bin:/opt/homebrew/bin:$PATH"
 export SPLAT360_DATA_DIR="$DATA_DIR"
 
 # --- process management -----------------------------------------------------
-PIDS=()
+PIDS=""
 
 kill_tree() {
+  # Children first (uvicorn --reload, npm -> node), then the process itself.
   local pid="$1" child
   for child in $(pgrep -P "$pid" 2>/dev/null || true); do kill_tree "$child"; done
   kill "$pid" 2>/dev/null || true
@@ -74,24 +75,24 @@ cleanup() {
   trap - EXIT INT TERM
   log "stopping…"
   local pid
-  for pid in "${PIDS[@]:-}"; do [[ -n "$pid" ]] && kill_tree "$pid"; done
+  for pid in $PIDS; do kill_tree "$pid"; done
   sleep 0.5
-  for pid in "${PIDS[@]:-}"; do [[ -n "$pid" ]] && kill -9 "$pid" 2>/dev/null || true; done
+  for pid in $PIDS; do kill -9 "$pid" 2>/dev/null || true; done
   wait 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
 
+run_in_dir() {
+  local dir="$1"; shift
+  cd "$dir" && exec "$@"
+}
+
 start() {
-  # start <label> <command...>
+  # start <label> <command...>: run in the background with a line prefix.
   local label="$1"; shift
   log "starting $label: ${C_DIM}$*${C_RESET}"
-  "$@" 2>&1 | sed -u "s/^/[$label] /" &
-  # $! is the sed; find the actual command pid as its sibling in the pipeline
-  local sed_pid=$!
-  local cmd_pid
-  cmd_pid="$(pgrep -P $$ -n 2>/dev/null | head -n 1 || true)"
-  PIDS+=("$sed_pid")
-  [[ -n "$cmd_pid" && "$cmd_pid" != "$sed_pid" ]] && PIDS+=("$cmd_pid")
+  "$@" > >(awk -v p="[$label] " '{ print p $0; fflush() }') 2>&1 &
+  PIDS="$PIDS $!"
 }
 
 # --- go -----------------------------------------------------------------------
@@ -104,19 +105,20 @@ if [[ $WITH_DESKTOP -eq 1 && ! -d "$REPO_ROOT/desktop/node_modules" ]]; then
   npm --prefix "$REPO_ROOT/desktop" install
 fi
 
-(cd "$REPO_ROOT/engine" && start engine "${SPLAT360[@]}" --data-dir "$DATA_DIR" serve --host 127.0.0.1 --port "$PORT" --reload)
+# cwd = engine/ so that uvicorn --reload watches the package sources.
+start engine run_in_dir "$REPO_ROOT/engine" \
+  "${SPLAT360[@]}" --data-dir "$DATA_DIR" serve --host 127.0.0.1 --port "$PORT" --reload
 
 if [[ $WITH_FRONTEND -eq 1 ]]; then
   start frontend npm --prefix "$REPO_ROOT/frontend" run dev -- --port 5173
 fi
 
 if [[ $WITH_DESKTOP -eq 1 ]]; then
-  # The shell waits for the Vite server itself; give it a head start anyway.
-  sleep 2
+  sleep 2  # let Vite bind its port before the shell tries to load it
   start desktop npm --prefix "$REPO_ROOT/desktop" run dev
 fi
 
 log "engine  → http://127.0.0.1:$PORT   (API docs: /api/docs)"
-[[ $WITH_FRONTEND -eq 1 ]] && log "web UI  → http://localhost:5173"
+if [[ $WITH_FRONTEND -eq 1 ]]; then log "web UI  → http://localhost:5173"; fi
 log "press Ctrl-C to stop everything"
 wait
