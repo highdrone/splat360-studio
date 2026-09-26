@@ -137,7 +137,7 @@ def tags_sheet(out: Path = typer.Option(Path("apriltags.pdf"), "--out", "-o"), f
 
 
 @app.command()
-def demo(out: Path = typer.Option(Path("synthetic.mp4"), "--out", "-o"), frames: int = 90, width: int = 2048):
+def demo(out: Path = typer.Option(Path("synthetic.mp4"), "--out", "-o"), frames: int = 150, width: int = 2048):
     """Render a synthetic tagged room as an equirectangular clip (for testing)."""
     from .synth import render_synthetic_clip
 

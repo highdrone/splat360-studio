@@ -27,7 +27,7 @@ def test_full_pipeline_recovers_metric_scale(data_dir, tmp_path):
     from splat360.synth import render_synthetic_clip
 
     video = tmp_path / "synthetic.mp4"
-    gt = render_synthetic_clip(video, frames=60, width=2048)
+    gt = render_synthetic_clip(video, frames=150, width=2048)
     store = ProjectStore(data_dir)
     settings = PipelineSettings(
         keyframes=KeyframeSettings(target_count=30), views=ViewSettings(size_px=800),

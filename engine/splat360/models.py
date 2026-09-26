@@ -488,7 +488,7 @@ class Health(BaseModel):
 
 class SyntheticDemoRequest(BaseModel):
     name: str = "Synthetic demo room"
-    frames: int = Field(90, ge=20, le=600)
+    frames: int = Field(150, ge=150, le=900, description="At least 150 frames (5 s at 30 fps) so the clip passes validation.")
     width: int = Field(2048, ge=512, le=7680)
     fps: float = 30.0
     seed: int = 0

@@ -223,7 +223,7 @@ def _rot_z(deg: float) -> np.ndarray:
 def render_synthetic_clip(
     out_video: Path,
     *,
-    frames: int = 90,
+    frames: int = 150,
     width: int = 2048,
     fps: float = 30.0,
     spec: Optional[RoomSpec] = None,
