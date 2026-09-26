@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from functools import lru_cache
+from functools import cache
 from importlib import resources
 
 import numpy as np
@@ -96,7 +96,7 @@ class TagFamily:
         return self.width_at_border
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load_all() -> dict[str, TagFamily]:
     with resources.files("splat360.data").joinpath("apriltag_families.json").open("r") as f:
         raw = json.load(f)

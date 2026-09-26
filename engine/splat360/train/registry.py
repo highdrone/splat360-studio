@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from .base import Trainer
 from .brush import BrushTrainer
 from .opensplat import OpenSplatTrainer
@@ -24,7 +22,7 @@ def resolve_trainer(backend: str) -> Trainer:
     return TRAINERS[backend]
 
 
-def installed_trainer() -> Optional[str]:
+def installed_trainer() -> str | None:
     for name in PREFERENCE:
         if TRAINERS[name].available():
             return name

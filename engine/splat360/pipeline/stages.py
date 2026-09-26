@@ -3,14 +3,20 @@ from __future__ import annotations
 
 import json
 import shutil
-import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from ..jobs import StageContext
-from ..models import (AlignmentReport, Artifact, ProjectReport, SfmReport, StageName, TagObservation, TagSummary,
-                      TrainReport)
+from ..models import (
+    AlignmentReport,
+    Artifact,
+    ProjectReport,
+    SfmReport,
+    StageName,
+    TagObservation,
+    TagSummary,
+    TrainReport,
+)
 from ..store import ProjectPaths
 from ..train.dataset import prepare_dataset
 from ..train.ply import ply_to_splat, splat_count
@@ -211,14 +217,14 @@ STAGE_FUNCTIONS = {
 
 
 # --------------------------------------------------------------------------
-def _read_json(path: Path) -> Optional[dict]:
+def _read_json(path: Path) -> dict | None:
     try:
         return json.loads(path.read_text()) if path.exists() else None
     except Exception:
         return None
 
 
-def build_report(paths: ProjectPaths, project, trep: Optional[TrainReport] = None) -> ProjectReport:
+def build_report(paths: ProjectPaths, project, trep: TrainReport | None = None) -> ProjectReport:
     kf = _read_json(paths.keyframes / "index.json") or {}
     vi = _read_json(paths.views / "index.json") or {}
     tags = _read_json(paths.tags_dir / "summary.json")
@@ -247,7 +253,7 @@ def build_report(paths: ProjectPaths, project, trep: Optional[TrainReport] = Non
     return report
 
 
-def quality_score(r: ProjectReport) -> tuple[Optional[float], list[str]]:
+def quality_score(r: ProjectReport) -> tuple[float | None, list[str]]:
     notes: list[str] = []
     score = 100.0
     if r.sfm:
@@ -316,7 +322,7 @@ def collect_artifacts(paths: ProjectPaths, project_id: str) -> list[Artifact]:
     return out
 
 
-def resolve_artifact(paths: ProjectPaths, name: str) -> Optional[Path]:
+def resolve_artifact(paths: ProjectPaths, name: str) -> Path | None:
     if "/" in name or name.startswith("."):
         return None
     for base in (paths.export, paths.align):
@@ -326,7 +332,7 @@ def resolve_artifact(paths: ProjectPaths, name: str) -> Optional[Path]:
     return None
 
 
-def thumbnail_url(paths: ProjectPaths, project_id: str) -> Optional[str]:
+def thumbnail_url(paths: ProjectPaths, project_id: str) -> str | None:
     thumbs = paths.keyframes / "thumbs"
     if thumbs.exists():
         files = sorted(thumbs.glob("*.jpg"))

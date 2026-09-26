@@ -1,16 +1,13 @@
 import json
-import threading
 import time
-from pathlib import Path
 
-import pytest
 from fastapi.testclient import TestClient
 
 from splat360.api import create_app
 from splat360.jobs import JobManager
-from splat360.models import JobStatus, ProbeInfo, StageName, StageStatus, STAGE_ORDER
+from splat360.models import STAGE_ORDER, JobStatus, ProbeInfo, StageName, StageStatus
 from splat360.store import ProjectStore
-from splat360.util.proc import Cancelled, ToolError
+from splat360.util.proc import ToolError
 
 
 def _fake_stages(fail_at=None, slow=None, calls=None):

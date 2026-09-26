@@ -6,21 +6,38 @@ import json
 import mimetypes
 import os
 import queue
-import shutil
 from pathlib import Path
-from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Query, Request, UploadFile, WebSocket, WebSocketDisconnect
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, Response
+from fastapi import FastAPI, HTTPException, Query, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 
-from .config import ENGINE_VERSION, settings as cfg
+from .config import ENGINE_VERSION
+from .config import settings as cfg
 from .doctor import run_doctor
 from .jobs import JobManager
-from .models import (Health, JobEvent, PipelineSettings, ProjectCreate, ProjectUpdate, QualityPreset, RunRequest,
-                     SetSourceRequest, StageName, STAGE_LABELS, STAGE_ORDER, SyntheticDemoRequest, TagFamilyInfo,
-                     TagPlanRequest, TagSheetRequest, TrainSettings, KeyframeSettings, SfmSettings, ViewSettings,
-                     ProjectStatus)
+from .models import (
+    STAGE_LABELS,
+    STAGE_ORDER,
+    Health,
+    JobEvent,
+    KeyframeSettings,
+    PipelineSettings,
+    ProjectCreate,
+    ProjectStatus,
+    ProjectUpdate,
+    QualityPreset,
+    RunRequest,
+    SetSourceRequest,
+    SfmSettings,
+    StageName,
+    SyntheticDemoRequest,
+    TagFamilyInfo,
+    TagPlanRequest,
+    TagSheetRequest,
+    TrainSettings,
+    ViewSettings,
+)
 from .pipeline.probe import probe_video
 from .pipeline.stages import STAGE_FUNCTIONS, build_report, collect_artifacts, resolve_artifact, thumbnail_url
 from .store import ProjectStore
@@ -47,8 +64,8 @@ def presets() -> list[QualityPreset]:
     ]
 
 
-def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManager] = None,
-               frontend_dir: Optional[Path] = None) -> FastAPI:
+def create_app(store: ProjectStore | None = None, manager: JobManager | None = None,
+               frontend_dir: Path | None = None) -> FastAPI:
     cfg.ensure_dirs()
     store = store or ProjectStore(cfg.data_dir)
     manager = manager or JobManager(store, STAGE_FUNCTIONS)
@@ -178,7 +195,7 @@ def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManage
         try:
             return manager.submit(p, body.from_stage, body.force)
         except RuntimeError as e:
-            raise HTTPException(409, str(e))
+            raise HTTPException(409, str(e)) from e
 
     @app.get("/api/projects/{pid}/jobs")
     def project_jobs(pid: str):
@@ -252,7 +269,7 @@ def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManage
         return json.loads(f.read_text())
 
     @app.get("/api/projects/{pid}/tags/observations")
-    def tag_observations(pid: str, tag_id: Optional[int] = None):
+    def tag_observations(pid: str, tag_id: int | None = None):
         get_project(pid)
         f = store.paths(pid).tags_dir / "observations.json"
         if not f.exists():
@@ -310,7 +327,7 @@ def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManage
         lines = f.read_text(errors="replace").splitlines()
         return "\n".join(lines[-tail:]) if tail > 0 else "\n".join(lines)
 
-    async def _stream(ws: WebSocket, job_id: Optional[str]):
+    async def _stream(ws: WebSocket, job_id: str | None):
         await ws.accept()
         sid, q = manager.bus.subscribe(job_id)
         try:
@@ -367,7 +384,7 @@ def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManage
         try:
             return Response(render_tag_png(family, tag_id, px=px), media_type="image/png")
         except (KeyError, ValueError) as e:
-            raise HTTPException(404, str(e))
+            raise HTTPException(404, str(e)) from e
 
     @app.get("/api/tags/{family}/{tag_id}.svg")
     def tag_svg(family: str, tag_id: int, size_mm: float = Query(200.0, gt=10, le=2000)):
@@ -375,7 +392,7 @@ def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManage
         try:
             return Response(render_tag_svg(family, tag_id, size_mm), media_type="image/svg+xml")
         except (KeyError, ValueError) as e:
-            raise HTTPException(404, str(e))
+            raise HTTPException(404, str(e)) from e
 
     @app.post("/api/tags/sheet")
     def tag_sheet(body: TagSheetRequest):
@@ -384,9 +401,9 @@ def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManage
             get_family(body.family)
             pdf = render_tag_sheet(body)
         except KeyError as e:
-            raise HTTPException(422, str(e))
+            raise HTTPException(422, str(e)) from e
         except ValueError as e:
-            raise HTTPException(422, str(e))
+            raise HTTPException(422, str(e)) from e
         fname = f"splat360-{body.family}-{int(body.tag_size_mm)}mm.pdf"
         return Response(pdf, media_type="application/pdf",
                         headers={"Content-Disposition": f'attachment; filename="{fname}"'})
@@ -397,7 +414,7 @@ def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManage
         try:
             return sheet_layout(body)
         except (KeyError, ValueError) as e:
-            raise HTTPException(422, str(e))
+            raise HTTPException(422, str(e)) from e
 
     @app.post("/api/tags/plan")
     def tag_plan(body: TagPlanRequest):
@@ -435,7 +452,7 @@ def create_app(store: Optional[ProjectStore] = None, manager: Optional[JobManage
     return app
 
 
-def _default_frontend_dir() -> Optional[Path]:
+def _default_frontend_dir() -> Path | None:
     env = os.environ.get("SPLAT360_FRONTEND_DIR")
     cands = [Path(env)] if env else []
     here = Path(__file__).resolve()

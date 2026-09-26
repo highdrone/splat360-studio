@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import struct
+from collections.abc import Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
 
 import numpy as np
 
@@ -166,7 +166,7 @@ def read_cameras_txt(path: Path) -> dict[int, Camera]:
 
 def read_images_txt(path: Path) -> dict[int, Image]:
     ims = {}
-    lines = [l for l in path.read_text().splitlines() if l.strip() and not l.startswith("#")]
+    lines = [ln for ln in path.read_text().splitlines() if ln.strip() and not ln.startswith("#")]
     for i in range(0, len(lines), 2):
         p = lines[i].split()
         iid = int(p[0])
@@ -213,8 +213,7 @@ def write_model_txt(model: Model, path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
     with open(path / "cameras.txt", "w") as fh:
         fh.write("# Camera list with one line of data per camera:\n#   CAMERA_ID, MODEL, WIDTH, HEIGHT, PARAMS[]\n")
-        for c in model.cameras.values():
-            fh.write(f"{c.camera_id} {c.model} {c.width} {c.height} {' '.join(repr(float(p)) for p in c.params)}\n")
+        fh.writelines(f"{c.camera_id} {c.model} {c.width} {c.height} {' '.join(repr(float(p)) for p in c.params)}\n" for c in model.cameras.values())
     with open(path / "images.txt", "w") as fh:
         fh.write("# Image list with two lines of data per image:\n#   IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME\n#   POINTS2D[] as (X, Y, POINT3D_ID)\n")
         for im in model.images.values():
@@ -249,8 +248,7 @@ def write_model_bin(model: Model, path: Path) -> None:
             fh.write(struct.pack("<i", im.camera_id))
             fh.write(im.name.encode("utf-8") + b"\x00")
             fh.write(struct.pack("<Q", len(im.xys)))
-            for (x, y), i in zip(im.xys, im.point3D_ids):
-                fh.write(struct.pack("<ddq", float(x), float(y), int(i)))
+            fh.writelines(struct.pack("<ddq", float(x), float(y), int(i)) for (x, y), i in zip(im.xys, im.point3D_ids))
     with open(path / "points3D.bin", "wb") as fh:
         fh.write(struct.pack("<Q", len(model.points)))
         for p in model.points.values():
@@ -259,8 +257,7 @@ def write_model_bin(model: Model, path: Path) -> None:
             fh.write(struct.pack("<BBB", *[int(x) for x in p.rgb]))
             fh.write(struct.pack("<d", float(p.error)))
             fh.write(struct.pack("<Q", len(p.track)))
-            for a, b in p.track:
-                fh.write(struct.pack("<ii", int(a), int(b)))
+            fh.writelines(struct.pack("<ii", int(a), int(b)) for a, b in p.track)
 
 
 def apply_similarity(model: Model, s: float, R: np.ndarray, t: np.ndarray) -> Model:

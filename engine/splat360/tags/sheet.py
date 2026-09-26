@@ -28,7 +28,6 @@ from __future__ import annotations
 import io
 import math
 from dataclasses import dataclass, field
-from typing import Optional
 
 from reportlab.lib.units import mm as MM
 from reportlab.lib.utils import simpleSplit
@@ -107,7 +106,7 @@ class SheetLayout:
     tag_pages: int
     guide_pages: int
     pages: int
-    message: Optional[str] = None
+    message: str | None = None
     extra: dict = field(default_factory=dict)
 
 
@@ -301,7 +300,7 @@ class _Canvas:
             self.c.drawCentredString(x * MM, y, s)
 
     def paragraph(self, x: float, y: float, s: str, width: float, size: float = 9.0,
-                  font: str = FONT, leading: Optional[float] = None) -> float:
+                  font: str = FONT, leading: float | None = None) -> float:
         """Draw wrapped text; returns the y just below the last line."""
         lead = leading if leading is not None else size * 1.3 / MM  # mm
         lines = simpleSplit(s, font, size, width * MM)

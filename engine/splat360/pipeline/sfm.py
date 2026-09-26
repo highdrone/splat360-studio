@@ -17,11 +17,11 @@ import json
 import re
 import shutil
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 from ..colmap import database as cdb
-from ..colmap.model import Model, read_model, write_model_bin, write_model_txt, write_points_ply
+from ..colmap.model import read_model, write_model_bin, write_model_txt, write_points_ply
 from ..colmap.pairs import build_pairs
 from ..colmap.runner import Colmap, Glomap
 from ..models import SfmReport, SfmSettings
@@ -33,7 +33,7 @@ _BRACKET = re.compile(r"\[(\d+)/(\d+)\]")
 _REGISTER = re.compile(r"Registering image #(\d+) \((\d+)\)")
 
 
-def _rig_config(view_index: ViewIndex, camera_ids: Optional[dict[str, int]], native: bool) -> list[dict]:
+def _rig_config(view_index: ViewIndex, camera_ids: dict[str, int] | None, native: bool) -> list[dict]:
     faces = view_index.faces
     ref = "front" if "front" in faces else faces[0]
     cams = []
@@ -57,7 +57,7 @@ def _rig_config(view_index: ViewIndex, camera_ids: Optional[dict[str, int]], nat
     return [rig]
 
 
-def _largest_model(sparse_dir: Path) -> Optional[Path]:
+def _largest_model(sparse_dir: Path) -> Path | None:
     best, best_n = None, -1
     for d in sorted(sparse_dir.iterdir()) if sparse_dir.exists() else []:
         if not d.is_dir():
@@ -77,9 +77,9 @@ def run_sfm(
     settings: SfmSettings,
     out_dir: Path,
     *,
-    cancel: Optional[CancelToken] = None,
-    on_progress: Optional[ProgressCb] = None,
-    log: Optional[Callable[[str], None]] = None,
+    cancel: CancelToken | None = None,
+    on_progress: ProgressCb | None = None,
+    log: Callable[[str], None] | None = None,
 ) -> tuple[SfmReport, Path]:
     """Run SfM. Returns the report and the path of the final ``sparse/0`` model directory."""
     log = log or (lambda s: None)

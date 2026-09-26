@@ -9,7 +9,8 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
-from .config import ENGINE_VERSION, is_apple_silicon, is_macos, settings as cfg
+from .config import ENGINE_VERSION, is_apple_silicon, is_macos
+from .config import settings as cfg
 from .models import DoctorReport, PlatformInfo, ToolStatus
 from .train.registry import TRAINERS, installed_trainer
 from .util.proc import find_tool, tool_version

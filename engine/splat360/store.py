@@ -7,10 +7,9 @@ import threading
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 from .config import settings as cfg
-from .models import Job, PipelineSettings, Project, ProjectStatus, StageState, STAGE_LABELS, STAGE_ORDER
+from .models import STAGE_LABELS, STAGE_ORDER, Job, PipelineSettings, Project, StageState
 
 
 def now() -> datetime:
@@ -61,7 +60,7 @@ def fresh_stages() -> list[StageState]:
 
 
 class ProjectStore:
-    def __init__(self, data_dir: Optional[Path] = None):
+    def __init__(self, data_dir: Path | None = None):
         self.data_dir = Path(data_dir) if data_dir else cfg.data_dir
         self.projects_dir = self.data_dir / "projects"
         self.projects_dir.mkdir(parents=True, exist_ok=True)
@@ -88,13 +87,13 @@ class ProjectStore:
         out.sort(key=lambda p: p.updated_at, reverse=True)
         return out
 
-    def get(self, project_id: str) -> Optional[Project]:
+    def get(self, project_id: str) -> Project | None:
         p = self.paths(project_id).project_json
         if not p.exists():
             return None
         return Project.model_validate_json(p.read_text())
 
-    def create(self, name: str, settings: Optional[PipelineSettings] = None) -> Project:
+    def create(self, name: str, settings: PipelineSettings | None = None) -> Project:
         with self._lock:
             pid = new_id("prj")
             paths = self.paths(pid)
@@ -126,7 +125,7 @@ class ProjectStore:
         d.mkdir(parents=True, exist_ok=True)
         self._write_json(d / f"{job.id}.json", job.model_dump_json(indent=1))
 
-    def get_job(self, job_id: str) -> Optional[Job]:
+    def get_job(self, job_id: str) -> Job | None:
         for d in self.projects_dir.iterdir():
             f = d / "jobs" / f"{job_id}.json"
             if f.exists():
@@ -152,7 +151,7 @@ class ProjectStore:
         return self.paths(job.project_id).logs / f"{job.id}.log"
 
     # -- stage markers -----------------------------------------------------
-    def stage_marker(self, project_id: str, stage: str) -> Optional[dict]:
+    def stage_marker(self, project_id: str, stage: str) -> dict | None:
         f = self.paths(project_id).stage_marker(stage)
         if not f.exists():
             return None

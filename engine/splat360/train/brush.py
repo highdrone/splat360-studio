@@ -1,20 +1,19 @@
 """Brush trainer (https://github.com/ArthurBrussee/brush) — wgpu/Metal, runs on Apple Silicon."""
 from __future__ import annotations
 
-import math
 import re
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 from ..models import TrainReport, TrainSettings
-from ..util.proc import CancelToken, ToolError, find_tool, run_streaming
+from ..util.proc import ToolError, find_tool, run_streaming
 from .base import ProgressCb, Trainer
 
 _STEPS = re.compile(r"(\d+)\s*/\s*(\d+)\s+Steps")
 _REFINE = re.compile(r"Refine iter (\d+), (\d+) splats")
 _EVAL = re.compile(r"Eval iter (\d+): PSNR ([\d.]+), ssim ([\d.]+)")
-_ITER = re.compile(r"\biter(?:ation)?\s*[:=]?\s*(\d+)", re.I)
+_ITER = re.compile(r"\biter(?:ation)?\s*[:=]?\s*(\d+)", re.IGNORECASE)
 
 
 class BrushTrainer(Trainer):
@@ -22,12 +21,12 @@ class BrushTrainer(Trainer):
     label = "Brush (Metal / wgpu)"
     CANDIDATES = ("brush-cli", "brush_cli", "brush", "brush_app")
 
-    def executable(self) -> Optional[str]:
+    def executable(self) -> str | None:
         return find_tool(self.CANDIDATES)
 
     def train(self, dataset_dir: Path, out_dir: Path, settings: TrainSettings, *, cancel=None,
-              on_progress: Optional[ProgressCb] = None, log: Optional[Callable[[str], None]] = None,
-              metrics: Optional[Callable[[dict], None]] = None) -> TrainReport:
+              on_progress: ProgressCb | None = None, log: Callable[[str], None] | None = None,
+              metrics: Callable[[dict], None] | None = None) -> TrainReport:
         exe = self.executable()
         if not exe:
             raise ToolError("Brush not found. Run scripts/setup-mac.sh or see docs/INSTALL.md")

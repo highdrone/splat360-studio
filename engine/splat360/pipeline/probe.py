@@ -83,7 +83,7 @@ def probe_video(path: str | Path) -> ProbeInfo:
             timeout=60,
         )
         data = json.loads(out)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         issues.append(ProbeIssue(level="error", code="probe_failed", message=f"ffprobe failed: {e}"))
         return info
 

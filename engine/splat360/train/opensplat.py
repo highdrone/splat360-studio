@@ -3,26 +3,26 @@ from __future__ import annotations
 
 import re
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 from ..models import TrainReport, TrainSettings
 from ..util.proc import ToolError, find_tool, run_streaming
 from .base import ProgressCb, Trainer
 
-_STEP = re.compile(r"Step\s+(\d+)[:/]\s*(?:loss\s*[=:]?\s*([\d.]+))?", re.I)
+_STEP = re.compile(r"Step\s+(\d+)[:/]\s*(?:loss\s*[=:]?\s*([\d.]+))?", re.IGNORECASE)
 
 
 class OpenSplatTrainer(Trainer):
     name = "opensplat"
     label = "OpenSplat (libtorch / MPS)"
 
-    def executable(self) -> Optional[str]:
+    def executable(self) -> str | None:
         return find_tool(["opensplat"])
 
     def train(self, dataset_dir: Path, out_dir: Path, settings: TrainSettings, *, cancel=None,
-              on_progress: Optional[ProgressCb] = None, log: Optional[Callable[[str], None]] = None,
-              metrics: Optional[Callable[[dict], None]] = None) -> TrainReport:
+              on_progress: ProgressCb | None = None, log: Callable[[str], None] | None = None,
+              metrics: Callable[[dict], None] | None = None) -> TrainReport:
         exe = self.executable()
         if not exe:
             raise ToolError("OpenSplat not found")

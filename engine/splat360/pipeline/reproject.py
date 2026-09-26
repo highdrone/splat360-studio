@@ -17,16 +17,16 @@ import json
 import os
 import shutil
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Callable, Optional
 
 import cv2
 import numpy as np
 
 from ..models import ViewSettings
-from ..util.proc import CancelToken, Cancelled, ToolError, cpu_count
+from ..util.proc import Cancelled, CancelToken, ToolError, cpu_count
 from . import geometry as G
 from .extract import KeyframeIndex
 
@@ -98,9 +98,9 @@ def reproject_keyframes(
     out_dir: Path,
     *,
     workers: int | None = None,
-    cancel: Optional[CancelToken] = None,
-    on_progress: Optional[ProgressCb] = None,
-    log: Optional[Callable[[str], None]] = None,
+    cancel: CancelToken | None = None,
+    on_progress: ProgressCb | None = None,
+    log: Callable[[str], None] | None = None,
 ) -> ViewIndex:
     specs = G.LAYOUTS[settings.layout]
     size = int(settings.size_px)
@@ -166,7 +166,7 @@ def reproject_keyframes(
         except Cancelled:
             pool.shutdown(cancel_futures=True)
             raise
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             pool.shutdown(cancel_futures=True)
             raise ToolError(f"reprojection failed: {e}") from e
 
@@ -196,7 +196,7 @@ def reproject_keyframes(
     return idx
 
 
-def load_view_index(out_dir: Path) -> Optional[ViewIndex]:
+def load_view_index(out_dir: Path) -> ViewIndex | None:
     f = out_dir / "index.json"
     if not f.exists():
         return None

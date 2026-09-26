@@ -1,0 +1,92 @@
+name: Release (macOS DMG)
+
+# Manual: Actions > Release (macOS DMG) > Run workflow.
+# Builds the arm64 DMG + zip on a macOS 14 runner and uploads them as an
+# artifact. Signing and notarization happen only when the repository secrets
+# APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID and CSC_LINK /
+# CSC_KEY_PASSWORD (base64 .p12 of the Developer ID certificate) are set;
+# otherwise the DMG is unsigned and users must clear the quarantine flag
+# (see docs/TROUBLESHOOTING.md).
+
+on:
+  workflow_dispatch:
+    inputs:
+      notarize:
+        description: Sign and notarize (requires the Apple secrets)
+        type: boolean
+        default: false
+      attach_to_release:
+        description: Attach the DMG to the GitHub release for the current tag (needs a tag ref)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build DMG (arm64)
+    runs-on: macos-14
+    timeout-minutes: 60
+    env:
+      NOTARIZE: ${{ inputs.notarize && secrets.APPLE_ID != '' && 'true' || 'false' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            frontend/package-lock.json
+            desktop/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          npm --prefix frontend ci
+          npm --prefix desktop ci
+
+      - name: Checks
+        run: |
+          npm --prefix frontend run typecheck
+          npm --prefix desktop run typecheck
+          npm --prefix desktop test
+
+      - name: Build web UI
+        run: npm --prefix frontend run build
+
+      - name: Build app (unsigned)
+        if: env.NOTARIZE != 'true'
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npm --prefix desktop run dist
+
+      - name: Build app (signed + notarized)
+        if: env.NOTARIZE == 'true'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        run: npm --prefix desktop run dist -- --config.mac.notarize=true
+
+      - name: List artifacts
+        run: ls -la desktop/release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Splat360-Studio-macOS-arm64
+          path: |
+            desktop/release/*.dmg
+            desktop/release/*.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Attach to GitHub release
+        if: inputs.attach_to_release && startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1 || gh release create "${GITHUB_REF_NAME}" --title "${GITHUB_REF_NAME}" --notes "Splat360 Studio ${GITHUB_REF_NAME}"
+          gh release upload "${GITHUB_REF_NAME}" desktop/release/*.dmg desktop/release/*.zip --clobber

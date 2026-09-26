@@ -24,9 +24,9 @@ import json
 import math
 import re
 import time
-from dataclasses import dataclass, asdict
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Callable, Optional
 
 import cv2
 import numpy as np
@@ -73,9 +73,9 @@ def score_frames(
     end_s: float,
     width: int,
     height: int,
-    cancel: Optional[CancelToken] = None,
-    on_progress: Optional[ProgressCb] = None,
-    log: Optional[Callable[[str], None]] = None,
+    cancel: CancelToken | None = None,
+    on_progress: ProgressCb | None = None,
+    log: Callable[[str], None] | None = None,
 ) -> list[tuple[int, float, float]]:
     """Decode the clip at proxy resolution and return (frame_index, time_s, sharpness)."""
     ffmpeg = find_tool("ffmpeg")
@@ -171,9 +171,9 @@ def extract_keyframes(
     settings: KeyframeSettings,
     out_dir: Path,
     *,
-    cancel: Optional[CancelToken] = None,
-    on_progress: Optional[ProgressCb] = None,
-    log: Optional[Callable[[str], None]] = None,
+    cancel: CancelToken | None = None,
+    on_progress: ProgressCb | None = None,
+    log: Callable[[str], None] | None = None,
 ) -> KeyframeIndex:
     ffmpeg = find_tool("ffmpeg")
     if not ffmpeg:
@@ -274,7 +274,7 @@ def extract_keyframes(
     return idx
 
 
-def load_keyframe_index(out_dir: Path) -> Optional[KeyframeIndex]:
+def load_keyframe_index(out_dir: Path) -> KeyframeIndex | None:
     f = out_dir / "index.json"
     if not f.exists():
         return None

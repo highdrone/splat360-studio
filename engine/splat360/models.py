@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum
-from typing import Any, Literal, Optional
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
@@ -80,8 +80,8 @@ class ProjectStatus(str, Enum):
 # --------------------------------------------------------------------------
 class KeyframeSettings(BaseModel):
     target_count: int = Field(200, ge=20, le=1200, description="Keyframes to keep from the clip.")
-    start_s: Optional[float] = Field(None, ge=0, description="Trim start (seconds).")
-    end_s: Optional[float] = Field(None, ge=0, description="Trim end (seconds).")
+    start_s: float | None = Field(None, ge=0, description="Trim start (seconds).")
+    end_s: float | None = Field(None, ge=0, description="Trim end (seconds).")
     blur_reject_fraction: float = Field(
         0.25, ge=0, le=0.9,
         description="Fraction of candidate frames in each window to reject as blurry before picking.",
@@ -121,7 +121,7 @@ class TagSettings(BaseModel):
         description="Where tags were placed. Floor tags let us level the scene from the tag plane.",
     )
     min_decision_margin: float = Field(30.0, ge=0, description="Reject weak detections below this margin.")
-    ids: Optional[list[int]] = Field(None, description="Restrict detection to these ids (from the printed sheet).")
+    ids: list[int] | None = Field(None, description="Restrict detection to these ids (from the printed sheet).")
 
 
 class SfmSettings(BaseModel):
@@ -182,27 +182,27 @@ class ProbeIssue(BaseModel):
     level: Literal["error", "warning", "info"]
     code: str
     message: str
-    hint: Optional[str] = None
+    hint: str | None = None
 
 
 class ProbeInfo(BaseModel):
     path: str
     filename: str
     size_bytes: int
-    container: Optional[str] = None
-    codec: Optional[str] = None
-    width: Optional[int] = None
-    height: Optional[int] = None
-    fps: Optional[float] = None
-    duration_s: Optional[float] = None
-    frame_count: Optional[int] = None
-    bit_rate: Optional[int] = None
-    pix_fmt: Optional[str] = None
+    container: str | None = None
+    codec: str | None = None
+    width: int | None = None
+    height: int | None = None
+    fps: float | None = None
+    duration_s: float | None = None
+    frame_count: int | None = None
+    bit_rate: int | None = None
+    pix_fmt: str | None = None
     is_equirectangular: bool = False
     projection: Literal["equirectangular", "dual_fisheye", "unknown"] = "unknown"
     is_insta360_raw: bool = False
-    camera_make: Optional[str] = None
-    camera_model: Optional[str] = None
+    camera_make: str | None = None
+    camera_model: str | None = None
     issues: list[ProbeIssue] = Field(default_factory=list)
 
     @property
@@ -219,11 +219,11 @@ class StageState(BaseModel):
     status: StageStatus = StageStatus.pending
     progress: float = Field(0.0, ge=0, le=1)
     message: str = ""
-    started_at: Optional[datetime] = None
-    finished_at: Optional[datetime] = None
-    eta_s: Optional[float] = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    eta_s: float | None = None
     metrics: dict[str, Any] = Field(default_factory=dict)
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class Job(BaseModel):
@@ -233,10 +233,10 @@ class Job(BaseModel):
     from_stage: StageName = StageName.probe
     stages: list[StageState]
     created_at: datetime
-    started_at: Optional[datetime] = None
-    finished_at: Optional[datetime] = None
-    error: Optional[str] = None
-    current_stage: Optional[StageName] = None
+    started_at: datetime | None = None
+    finished_at: datetime | None = None
+    error: str | None = None
+    current_stage: StageName | None = None
 
     @property
     def is_active(self) -> bool:
@@ -248,9 +248,9 @@ class JobEvent(BaseModel):
     type: Literal["job", "stage", "log", "snapshot"]
     job_id: str
     ts: datetime
-    job: Optional[Job] = None            # type == "job" | "snapshot"
-    stage: Optional[StageState] = None  # type == "stage"
-    line: Optional[str] = None          # type == "log"
+    job: Job | None = None            # type == "job" | "snapshot"
+    stage: StageState | None = None  # type == "stage"
+    line: str | None = None          # type == "log"
 
 
 # --------------------------------------------------------------------------
@@ -262,8 +262,8 @@ class Artifact(BaseModel):
     path: str            # absolute path on disk
     size_bytes: int
     url: str             # download URL relative to API root
-    stage: Optional[StageName] = None
-    created_at: Optional[datetime] = None
+    stage: StageName | None = None
+    created_at: datetime | None = None
 
 
 class TagObservation(BaseModel):
@@ -291,26 +291,26 @@ class TagSummary(BaseModel):
 
 class AlignmentReport(BaseModel):
     method: Literal["tags", "camera_up", "none"]
-    scale_factor: Optional[float] = None
-    scale_residual_pct: Optional[float] = None
+    scale_factor: float | None = None
+    scale_residual_pct: float | None = None
     tags_used: int = 0
-    tag_edge_rmse_mm: Optional[float] = None
+    tag_edge_rmse_mm: float | None = None
     ground_plane_from_tags: bool = False
-    transform: Optional[list[list[float]]] = None   # 4x4 row-major similarity applied to the model
+    transform: list[list[float]] | None = None   # 4x4 row-major similarity applied to the model
     notes: list[str] = Field(default_factory=list)
 
 
 class SfmReport(BaseModel):
     engine: str
-    colmap_version: Optional[str] = None
+    colmap_version: str | None = None
     images_total: int
     images_registered: int
     registered_fraction: float
     frames_total: int
     frames_registered: int
     points3d: int
-    mean_reprojection_error_px: Optional[float] = None
-    mean_track_length: Optional[float] = None
+    mean_reprojection_error_px: float | None = None
+    mean_track_length: float | None = None
     rig_constrained: bool = False
     models_found: int = 1
     warnings: list[str] = Field(default_factory=list)
@@ -320,26 +320,26 @@ class TrainReport(BaseModel):
     backend: str
     iterations: int
     duration_s: float
-    final_splats: Optional[int] = None
-    psnr: Optional[float] = None
-    ssim: Optional[float] = None
-    ply_path: Optional[str] = None
+    final_splats: int | None = None
+    psnr: float | None = None
+    ssim: float | None = None
+    ply_path: str | None = None
     notes: list[str] = Field(default_factory=list)
 
 
 class ProjectReport(BaseModel):
     project_id: str
     generated_at: datetime
-    source: Optional[ProbeInfo] = None
+    source: ProbeInfo | None = None
     settings: PipelineSettings
     keyframes: dict[str, Any] = Field(default_factory=dict)
     views: dict[str, Any] = Field(default_factory=dict)
-    tags: Optional[TagSummary] = None
-    sfm: Optional[SfmReport] = None
-    alignment: Optional[AlignmentReport] = None
-    train: Optional[TrainReport] = None
+    tags: TagSummary | None = None
+    sfm: SfmReport | None = None
+    alignment: AlignmentReport | None = None
+    train: TrainReport | None = None
     artifacts: list[Artifact] = Field(default_factory=list)
-    quality_score: Optional[float] = Field(None, ge=0, le=100)
+    quality_score: float | None = Field(None, ge=0, le=100)
     quality_notes: list[str] = Field(default_factory=list)
     timings_s: dict[str, float] = Field(default_factory=dict)
 
@@ -354,26 +354,26 @@ class Project(BaseModel):
     updated_at: datetime
     status: ProjectStatus = ProjectStatus.draft
     workdir: str
-    source: Optional[ProbeInfo] = None
+    source: ProbeInfo | None = None
     settings: PipelineSettings = PipelineSettings()
-    current_job_id: Optional[str] = None
-    last_job_id: Optional[str] = None
+    current_job_id: str | None = None
+    last_job_id: str | None = None
     stages: list[StageState] = Field(default_factory=list)
     artifacts: list[Artifact] = Field(default_factory=list)
     notes: str = ""
-    thumbnail_url: Optional[str] = None
+    thumbnail_url: str | None = None
 
 
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=120)
-    settings: Optional[PipelineSettings] = None
-    preset: Optional[Literal["fast", "balanced", "quality"]] = None
+    settings: PipelineSettings | None = None
+    preset: Literal["fast", "balanced", "quality"] | None = None
 
 
 class ProjectUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=120)
-    settings: Optional[PipelineSettings] = None
-    notes: Optional[str] = None
+    name: str | None = Field(None, min_length=1, max_length=120)
+    settings: PipelineSettings | None = None
+    notes: str | None = None
 
 
 class SetSourceRequest(BaseModel):
@@ -381,7 +381,7 @@ class SetSourceRequest(BaseModel):
 
 
 class RunRequest(BaseModel):
-    from_stage: Optional[StageName] = Field(
+    from_stage: StageName | None = Field(
         None, description="Restart from this stage, reusing earlier outputs. Default: first incomplete stage."
     )
     force: bool = Field(False, description="Ignore cached stage outputs and run everything from from_stage.")
@@ -393,8 +393,8 @@ class RunRequest(BaseModel):
 class ToolStatus(BaseModel):
     name: str
     found: bool
-    path: Optional[str] = None
-    version: Optional[str] = None
+    path: str | None = None
+    version: str | None = None
     required: bool
     role: str
     install_hint: str
@@ -408,7 +408,7 @@ class PlatformInfo(BaseModel):
     cpu_count: int
     ram_gb: float
     disk_free_gb: float
-    gpu: Optional[str] = None
+    gpu: str | None = None
     python: str
     apple_silicon: bool = False
 
@@ -419,7 +419,7 @@ class DoctorReport(BaseModel):
     can_train: bool
     tools: list[ToolStatus]
     platform: PlatformInfo
-    trainer: Optional[str] = None
+    trainer: str | None = None
     data_dir: str
     engine_version: str
     messages: list[str] = Field(default_factory=list)
@@ -441,7 +441,7 @@ class TagFamilyInfo(BaseModel):
 
 class TagSheetRequest(BaseModel):
     family: str = "tag36h11"
-    ids: Optional[list[int]] = Field(None, description="Explicit ids. If omitted, uses first_id..first_id+count-1.")
+    ids: list[int] | None = Field(None, description="Explicit ids. If omitted, uses first_id..first_id+count-1.")
     first_id: int = Field(0, ge=0)
     count: int = Field(12, ge=1, le=200)
     tag_size_mm: float = Field(130.0, gt=10, le=2000, description="Black square edge length as printed.")
@@ -451,7 +451,7 @@ class TagSheetRequest(BaseModel):
     label: bool = True
     include_guide: bool = Field(True, description="Prepend a placement guide page.")
     include_scale_check: bool = Field(True, description="Print a 100 mm ruler to verify the printer did not scale.")
-    project_name: Optional[str] = None
+    project_name: str | None = None
 
 
 class TagPlanRequest(BaseModel):

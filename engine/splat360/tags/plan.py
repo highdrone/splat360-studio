@@ -59,7 +59,7 @@ def plan_tags(req: TagPlanRequest) -> TagPlan:
     count = int(min(hi, max(count, math.ceil(math.sqrt(req.area_m2) * 1.5))))
     page, orientation = page_for_size(size, family)
     tips = [
-        f"Mount tags flat on rigid backing (foam board or cardboard); a curled tag breaks the scale estimate.",
+        "Mount tags flat on rigid backing (foam board or cardboard); a curled tag breaks the scale estimate.",
         "Spread tags around the whole space, on walls and the floor, at heights between 0.3 m and 1.8 m.",
         "From most points on your walk at least 3 tags should be visible and closer than "
         f"{max_dist:.1f} m ({size:.0f} mm tags at 1600 px views).",

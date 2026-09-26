@@ -5,7 +5,6 @@ Skipped unless SPLAT360_E2E=1 (takes several minutes on CPU).
 import json
 import os
 import time
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -20,7 +19,15 @@ pytestmark = pytest.mark.skipif(
 
 def test_full_pipeline_recovers_metric_scale(data_dir, tmp_path):
     from splat360.jobs import JobManager
-    from splat360.models import JobStatus, KeyframeSettings, PipelineSettings, SfmSettings, TagSettings, TrainSettings, ViewSettings
+    from splat360.models import (
+        JobStatus,
+        KeyframeSettings,
+        PipelineSettings,
+        SfmSettings,
+        TagSettings,
+        TrainSettings,
+        ViewSettings,
+    )
     from splat360.pipeline.probe import probe_video
     from splat360.pipeline.stages import STAGE_FUNCTIONS
     from splat360.store import ProjectStore

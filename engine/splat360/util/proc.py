@@ -8,9 +8,9 @@ import signal
 import subprocess
 import threading
 import time
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Sequence
 
 from ..config import extra_bin_dirs
 
@@ -85,7 +85,7 @@ def kill_tree(p: subprocess.Popen, grace_s: float = 3.0) -> None:
         pass
 
 
-def find_tool(names: Sequence[str] | str) -> Optional[str]:
+def find_tool(names: Sequence[str] | str) -> str | None:
     """Find the first executable among ``names`` on PATH or in extra bin dirs."""
     if isinstance(names, str):
         names = [names]
@@ -103,7 +103,7 @@ def find_tool(names: Sequence[str] | str) -> Optional[str]:
     return None
 
 
-def tool_version(cmd: Sequence[str], pattern: str = r"(\d+\.\d+(?:\.\d+)?)", timeout: float = 20) -> Optional[str]:
+def tool_version(cmd: Sequence[str], pattern: str = r"(\d+\.\d+(?:\.\d+)?)", timeout: float = 20) -> str | None:
     try:
         out = subprocess.run(list(cmd), capture_output=True, text=True, timeout=timeout)
     except Exception:
@@ -123,13 +123,13 @@ class RunResult:
 def run_streaming(
     cmd: Sequence[str],
     *,
-    cwd: Optional[Path] = None,
-    env: Optional[dict[str, str]] = None,
-    on_line: Optional[Callable[[str], None]] = None,
-    cancel: Optional[CancelToken] = None,
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
+    on_line: Callable[[str], None] | None = None,
+    cancel: CancelToken | None = None,
     check: bool = True,
     tail_lines: int = 60,
-    stdin_data: Optional[bytes] = None,
+    stdin_data: bytes | None = None,
     merge_stderr: bool = True,
 ) -> RunResult:
     """Run a command, streaming combined output line by line.
@@ -143,14 +143,14 @@ def run_streaming(
     if env:
         full_env.update(env)
     start = time.time()
-    popen_kwargs: dict = dict(
-        cwd=str(cwd) if cwd else None,
-        env=full_env,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT if merge_stderr else subprocess.DEVNULL,
-        stdin=subprocess.PIPE if stdin_data is not None else subprocess.DEVNULL,
-        bufsize=0,
-    )
+    popen_kwargs: dict = {
+        "cwd": str(cwd) if cwd else None,
+        "env": full_env,
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.STDOUT if merge_stderr else subprocess.DEVNULL,
+        "stdin": subprocess.PIPE if stdin_data is not None else subprocess.DEVNULL,
+        "bufsize": 0,
+    }
     if os.name == "posix":
         popen_kwargs["start_new_session"] = True
     p = subprocess.Popen(list(cmd), **popen_kwargs)
@@ -207,7 +207,7 @@ def run_streaming(
     return RunResult(returncode=rc, duration_s=dur, tail=tail)
 
 
-def run_capture(cmd: Sequence[str], timeout: float = 120, cwd: Optional[Path] = None) -> str:
+def run_capture(cmd: Sequence[str], timeout: float = 120, cwd: Path | None = None) -> str:
     out = subprocess.run(list(cmd), capture_output=True, text=True, timeout=timeout, cwd=str(cwd) if cwd else None)
     if out.returncode != 0:
         raise ToolError(f"{Path(cmd[0]).name} failed: {(out.stderr or out.stdout).strip()[-800:]}", out.returncode)

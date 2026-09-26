@@ -143,7 +143,6 @@ export function useJobStream(jobId: string | null | undefined): JobStream {
         }
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId]);
 
   return {

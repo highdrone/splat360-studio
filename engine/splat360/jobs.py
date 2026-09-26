@@ -4,25 +4,34 @@ from __future__ import annotations
 import queue
 import threading
 import traceback
+from collections.abc import Callable
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Callable, Optional
 
-from .models import (Job, JobEvent, JobStatus, Project, ProjectStatus, StageName, StageState, StageStatus,
-                     STAGE_LABELS, STAGE_ORDER)
+from .models import (
+    STAGE_LABELS,
+    STAGE_ORDER,
+    Job,
+    JobEvent,
+    JobStatus,
+    Project,
+    ProjectStatus,
+    StageName,
+    StageState,
+    StageStatus,
+)
 from .store import ProjectStore, new_id, now
-from .util.proc import CancelToken, Cancelled, ToolError
+from .util.proc import Cancelled, CancelToken, ToolError
 
 
 class EventBus:
     """Thread-safe fan-out of JobEvents to subscribers (websockets)."""
 
     def __init__(self) -> None:
-        self._subs: dict[int, tuple[Optional[str], queue.Queue]] = {}
+        self._subs: dict[int, tuple[str | None, queue.Queue]] = {}
         self._lock = threading.Lock()
         self._next = 0
 
-    def subscribe(self, job_id: Optional[str] = None) -> tuple[int, queue.Queue]:
+    def subscribe(self, job_id: str | None = None) -> tuple[int, queue.Queue]:
         q: queue.Queue = queue.Queue(maxsize=10000)
         with self._lock:
             sid = self._next
@@ -51,7 +60,7 @@ class EventBus:
 class StageContext:
     """What a stage function receives."""
 
-    def __init__(self, job: Job, project: Project, store: ProjectStore, manager: "JobManager",
+    def __init__(self, job: Job, project: Project, store: ProjectStore, manager: JobManager,
                  cancel: CancelToken, stage: StageState):
         self.job = job
         self.project = project
@@ -83,11 +92,11 @@ class StageContext:
         self.store.save(self.project)
 
 
-StageFn = Callable[[StageContext], Optional[dict]]
+StageFn = Callable[[StageContext], dict | None]
 
 
 class JobManager:
-    def __init__(self, store: ProjectStore, stage_fns: dict[StageName, StageFn], bus: Optional[EventBus] = None):
+    def __init__(self, store: ProjectStore, stage_fns: dict[StageName, StageFn], bus: EventBus | None = None):
         self.store = store
         self.bus = bus or EventBus()
         self.stage_fns = stage_fns
@@ -120,14 +129,14 @@ class JobManager:
                     p.stages = job.stages
                     self.store.save(p)
 
-    def submit(self, project: Project, from_stage: Optional[StageName], force: bool) -> Job:
+    def submit(self, project: Project, from_stage: StageName | None, force: bool) -> Job:
         with self._lock:
             active = self.active_for_project(project.id)
             if active:
                 raise RuntimeError(f"Project already has an active job ({active.id})")
             start = from_stage or self._first_incomplete(project)
             job = Job(id=new_id("job"), project_id=project.id, from_stage=start, stages=[], created_at=now())
-            order = [s for s in STAGE_ORDER]
+            order = list(STAGE_ORDER)
             start_idx = order.index(start)
             for i, s in enumerate(order):
                 st = StageState(name=s, label=STAGE_LABELS[s])
@@ -160,7 +169,7 @@ class JobManager:
                 return s
         return StageName.export
 
-    def cancel(self, job_id: str) -> Optional[Job]:
+    def cancel(self, job_id: str) -> Job | None:
         with self._lock:
             job = self._jobs.get(job_id) or self.store.get_job(job_id)
             if not job:
@@ -174,7 +183,7 @@ class JobManager:
                 self._finish(job, JobStatus.cancelled, "Cancelled before start")
             return job
 
-    def get(self, job_id: str) -> Optional[Job]:
+    def get(self, job_id: str) -> Job | None:
         with self._lock:
             j = self._jobs.get(job_id)
         return j or self.store.get_job(job_id)
@@ -186,7 +195,7 @@ class JobManager:
         jobs.update(live)
         return sorted(jobs.values(), key=lambda j: (not j.is_active, -j.created_at.timestamp()))
 
-    def active_for_project(self, project_id: str) -> Optional[Job]:
+    def active_for_project(self, project_id: str) -> Job | None:
         with self._lock:
             for j in self._jobs.values():
                 if j.project_id == project_id and j.is_active:
@@ -221,7 +230,7 @@ class JobManager:
                 continue
             try:
                 self._run(job)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 self._finish(job, JobStatus.failed, f"Internal error: {e}")
 
     def _run(self, job: Job) -> None:
@@ -232,16 +241,16 @@ class JobManager:
         cancel = self._cancels[job.id]
         log_path = self.store.job_log_path(job)
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        self._log_files[job.id] = open(log_path, "a", encoding="utf-8")
+        self._log_files[job.id] = open(log_path, "a", encoding="utf-8")  # noqa: SIM115 - closed in _finish
         job.status = JobStatus.running
         job.started_at = now()
         self.store.save_job(job)
         self._emit_job(job)
         self._log(job, f"job {job.id} started for project '{project.name}' from stage {job.from_stage.value}")
-        order = [s for s in STAGE_ORDER]
+        order = list(STAGE_ORDER)
         start_idx = order.index(job.from_stage)
         status = JobStatus.complete
-        error: Optional[str] = None
+        error: str | None = None
         for st in job.stages[start_idx:]:
             job.current_stage = st.name
             st.status = StageStatus.running
@@ -286,7 +295,7 @@ class JobManager:
                 status = JobStatus.failed
                 error = f"{st.label}: {e}"
                 self._log(job, f"stage {st.name.value} failed: {e}")
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 st.status = StageStatus.failed
                 st.error = f"{type(e).__name__}: {e}"
                 st.message = "Failed"
@@ -304,7 +313,7 @@ class JobManager:
                 break
         self._finish(job, status, error)
 
-    def _finish(self, job: Job, status: JobStatus, error: Optional[str]) -> None:
+    def _finish(self, job: Job, status: JobStatus, error: str | None) -> None:
         job.status = status
         job.error = error
         job.finished_at = now()

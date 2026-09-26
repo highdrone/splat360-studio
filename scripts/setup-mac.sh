@@ -91,6 +91,7 @@ DATA_DIR="${SPLAT360_DATA_DIR:-$HOME/Library/Application Support/Splat360}"
 VENV_DIR="$DATA_DIR/venv"          # must match desktop/src/helpers.ts venvDirFor()
 BIN_DIR="$DATA_DIR/bin"            # searched by the engine (config.extra_bin_dirs) and the desktop shell
 CARGO_BIN="$HOME/.cargo/bin"
+BREW=""                            # set once Homebrew is located
 BRUSH_REPO="https://github.com/ArthurBrussee/brush.git"
 BRUSH_RELEASE_URL="https://github.com/ArthurBrussee/brush/releases/download/v0.3.0/brush-app-aarch64-apple-darwin.tar.xz"
 MIN_PY_MINOR=11

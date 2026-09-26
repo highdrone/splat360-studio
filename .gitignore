@@ -1,6 +1,8 @@
 node_modules/
 dist/
 build/
+# desktop/build holds the macOS entitlements, not build output
+!desktop/build/
 .venv/
 __pycache__/
 *.pyc

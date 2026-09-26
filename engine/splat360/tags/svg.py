@@ -79,7 +79,8 @@ def render_tag_svg(
     width_mm = cells * cell_mm
     height_mm = (cells + label_cells) * cell_mm
 
-    fmt = lambda v: f"{v:.4f}".rstrip("0").rstrip(".")  # noqa: E731
+    def fmt(v):
+        return f"{v:.4f}".rstrip("0").rstrip(".")
     parts = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         (

@@ -15,12 +15,19 @@ from __future__ import annotations
 import json
 import math
 from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 import numpy as np
 
-from ..colmap.model import Model, apply_similarity, read_model, write_model_bin, write_model_txt, write_points_ply
+from ..colmap.model import (
+    Model,
+    apply_similarity,
+    read_model,
+    write_model_bin,
+    write_model_txt,
+    write_points_ply,
+)
 from ..models import AlignmentReport, TagObservation, TagSettings
 from . import geometry as G
 from .reproject import ViewIndex
@@ -121,7 +128,7 @@ def align_model(
     tag_settings: TagSettings,
     out_dir: Path,
     *,
-    log: Optional[Callable[[str], None]] = None,
+    log: Callable[[str], None] | None = None,
 ) -> tuple[AlignmentReport, Path]:
     """Scale, level and centre the model. Writes ``out_dir/sparse/0`` (bin), ``txt`` and a PLY."""
     log = log or (lambda s: None)

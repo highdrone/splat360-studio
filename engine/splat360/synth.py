@@ -14,9 +14,9 @@ from __future__ import annotations
 import json
 import math
 import subprocess
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Callable, Optional
 
 import cv2
 import numpy as np
@@ -94,20 +94,20 @@ class Room:
         self.faces: dict[str, dict] = {
             # Texture axes are chosen so that u x v points away from the viewer (into the surface);
             # otherwise tags would appear mirrored and could not be decoded.
-            "floor": dict(p0=np.array([-hw, y_floor, hd]), n=np.array([0, -1.0, 0]),
-                          u=np.array([1.0, 0, 0]), v=np.array([0, 0, -1.0]), lu=spec.width_m, lv=spec.depth_m, hue=20),
-            "ceiling": dict(p0=np.array([-hw, y_ceil, -hd]), n=np.array([0, 1.0, 0]),
-                            u=np.array([1.0, 0, 0]), v=np.array([0, 0, 1.0]), lu=spec.width_m, lv=spec.depth_m, hue=100),
-            "wall_front": dict(p0=np.array([-hw, y_ceil, hd]), n=np.array([0, 0, -1.0]),
-                               u=np.array([1.0, 0, 0]), v=np.array([0, 1.0, 0]), lu=spec.width_m, lv=spec.height_m, hue=60),
-            "wall_back": dict(p0=np.array([hw, y_ceil, -hd]), n=np.array([0, 0, 1.0]),
-                              u=np.array([-1.0, 0, 0]), v=np.array([0, 1.0, 0]), lu=spec.width_m, lv=spec.height_m, hue=140),
-            "wall_right": dict(p0=np.array([hw, y_ceil, hd]), n=np.array([-1.0, 0, 0]),
-                               u=np.array([0, 0, -1.0]), v=np.array([0, 1.0, 0]), lu=spec.depth_m, lv=spec.height_m, hue=0),
-            "wall_left": dict(p0=np.array([-hw, y_ceil, -hd]), n=np.array([1.0, 0, 0]),
-                              u=np.array([0, 0, 1.0]), v=np.array([0, 1.0, 0]), lu=spec.depth_m, lv=spec.height_m, hue=110),
+            "floor": {"p0": np.array([-hw, y_floor, hd]), "n": np.array([0, -1.0, 0]),
+                          "u": np.array([1.0, 0, 0]), "v": np.array([0, 0, -1.0]), "lu": spec.width_m, "lv": spec.depth_m, "hue": 20},
+            "ceiling": {"p0": np.array([-hw, y_ceil, -hd]), "n": np.array([0, 1.0, 0]),
+                            "u": np.array([1.0, 0, 0]), "v": np.array([0, 0, 1.0]), "lu": spec.width_m, "lv": spec.depth_m, "hue": 100},
+            "wall_front": {"p0": np.array([-hw, y_ceil, hd]), "n": np.array([0, 0, -1.0]),
+                               "u": np.array([1.0, 0, 0]), "v": np.array([0, 1.0, 0]), "lu": spec.width_m, "lv": spec.height_m, "hue": 60},
+            "wall_back": {"p0": np.array([hw, y_ceil, -hd]), "n": np.array([0, 0, 1.0]),
+                              "u": np.array([-1.0, 0, 0]), "v": np.array([0, 1.0, 0]), "lu": spec.width_m, "lv": spec.height_m, "hue": 140},
+            "wall_right": {"p0": np.array([hw, y_ceil, hd]), "n": np.array([-1.0, 0, 0]),
+                               "u": np.array([0, 0, -1.0]), "v": np.array([0, 1.0, 0]), "lu": spec.depth_m, "lv": spec.height_m, "hue": 0},
+            "wall_left": {"p0": np.array([-hw, y_ceil, -hd]), "n": np.array([1.0, 0, 0]),
+                              "u": np.array([0, 0, 1.0]), "v": np.array([0, 1.0, 0]), "lu": spec.depth_m, "lv": spec.height_m, "hue": 110},
         }
-        for name, f in self.faces.items():
+        for _name, f in self.faces.items():
             w, h = int(f["lu"] * ppm), int(f["lv"] * ppm)
             f["tex"] = _procedural_texture(rng, w, h, f["hue"])
             f["tw"], f["th"] = w, h
@@ -159,7 +159,7 @@ class Room:
             self.tags.append(self._paste_tag(face, tid, cu, cv_))
             tid += 1
         f = self.faces["floor"]
-        for i in range(spec.n_floor_tags):
+        for _ in range(spec.n_floor_tags):
             cu = float(rng.uniform(margin, f["lu"] - margin))
             cv_ = float(rng.uniform(margin, f["lv"] - margin))
             self.tags.append(self._paste_tag("floor", tid, cu, cv_))
@@ -175,7 +175,7 @@ class Room:
         d = d_rig @ rig_from_world                               # world dirs = R^T d
         out = np.zeros((height, width, 3), dtype=np.uint8)
         best_t = np.full((height, width), np.inf)
-        for name, f in self.faces.items():
+        for _name, f in self.faces.items():
             n = f["n"]
             denom = d @ n
             # ray hits the plane from inside when moving against the inward normal
@@ -226,8 +226,8 @@ def render_synthetic_clip(
     frames: int = 150,
     width: int = 2048,
     fps: float = 30.0,
-    spec: Optional[RoomSpec] = None,
-    on_progress: Optional[Callable[[float, str], None]] = None,
+    spec: RoomSpec | None = None,
+    on_progress: Callable[[float, str], None] | None = None,
 ) -> dict:
     """Render the clip and write ``<out_video>`` (H.264) plus ``<out_video>.ground_truth.json``."""
     spec = spec or RoomSpec()

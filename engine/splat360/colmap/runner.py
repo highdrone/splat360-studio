@@ -8,19 +8,19 @@ from __future__ import annotations
 
 import re
 import subprocess
+from collections.abc import Callable, Sequence
 from functools import lru_cache
 from pathlib import Path
-from typing import Callable, Optional, Sequence
 
 from ..util.proc import CancelToken, ToolError, find_tool, run_streaming
 
 
 class Colmap:
-    def __init__(self, exe: Optional[str] = None):
+    def __init__(self, exe: str | None = None):
         self.exe = exe or find_tool("colmap")
         if not self.exe:
             raise ToolError("COLMAP not found. Install with: brew install colmap")
-        self._version: Optional[tuple[int, ...]] = None
+        self._version: tuple[int, ...] | None = None
 
     # -- introspection ------------------------------------------------
     @property
@@ -44,7 +44,7 @@ class Colmap:
             return ()
         return tuple(int(g) for g in m.groups() if g is not None)
 
-    @lru_cache(maxsize=64)
+    @lru_cache(maxsize=64)  # noqa: B019 - one Colmap instance per stage run
     def options(self, command: str) -> frozenset[str]:
         """Option names accepted by a COLMAP subcommand (from ``--help``)."""
         try:
@@ -54,17 +54,17 @@ class Colmap:
             return frozenset()
         return frozenset(re.findall(r"--([A-Za-z0-9_.]+)", text))
 
-    @lru_cache(maxsize=1)
+    @lru_cache(maxsize=1)  # noqa: B019
     def commands(self) -> frozenset[str]:
         try:
             out = subprocess.run([self.exe, "help"], capture_output=True, text=True, timeout=30)
             text = out.stdout + out.stderr
         except Exception:
             return frozenset()
-        cmds = re.search(r"Available commands:(.*)", text, re.S)
+        cmds = re.search(r"Available commands:(.*)", text, re.DOTALL)
         if not cmds:
             return frozenset()
-        return frozenset(l.strip() for l in cmds.group(1).splitlines() if l.strip() and " " not in l.strip())
+        return frozenset(ln.strip() for ln in cmds.group(1).splitlines() if ln.strip() and " " not in ln.strip())
 
     @property
     def has_native_rigs(self) -> bool:
@@ -81,7 +81,7 @@ class Colmap:
         except Exception:
             return False
 
-    def pick(self, command: str, candidates: Sequence[str]) -> Optional[str]:
+    def pick(self, command: str, candidates: Sequence[str]) -> str | None:
         """First option name among ``candidates`` supported by ``command``."""
         opts = self.options(command)
         for c in candidates:
@@ -95,9 +95,9 @@ class Colmap:
         command: str,
         args: dict[str, object],
         *,
-        cancel: Optional[CancelToken] = None,
-        on_line: Optional[Callable[[str], None]] = None,
-        cwd: Optional[Path] = None,
+        cancel: CancelToken | None = None,
+        on_line: Callable[[str], None] | None = None,
+        cwd: Path | None = None,
     ) -> None:
         """Run ``colmap <command>`` with ``--key value`` args. Unknown options are dropped with a log note."""
         opts = self.options(command)
@@ -121,13 +121,13 @@ class Colmap:
 
 
 class Glomap:
-    def __init__(self, exe: Optional[str] = None):
+    def __init__(self, exe: str | None = None):
         self.exe = exe or find_tool("glomap")
         if not self.exe:
             raise ToolError("GLOMAP not found. Install with: brew install glomap (or choose the COLMAP engine)")
 
     def mapper(self, database: Path, image_path: Path, output: Path, *, threads: int = -1,
-               cancel: Optional[CancelToken] = None, on_line: Optional[Callable[[str], None]] = None) -> None:
+               cancel: CancelToken | None = None, on_line: Callable[[str], None] | None = None) -> None:
         cmd = [self.exe, "mapper", "--database_path", str(database), "--image_path", str(image_path),
                "--output_path", str(output)]
         if threads and threads > 0:

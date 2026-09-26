@@ -11,9 +11,9 @@ from __future__ import annotations
 import json
 import re
 import threading
+from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Callable, Iterable, Optional
 
 import cv2
 import numpy as np
@@ -43,7 +43,7 @@ class TagDetector:
         self.nthreads = nthreads
 
     def detect(self, image: np.ndarray, view: str = "", frame_index: int = 0, face: str = "",
-               min_decision_margin: float = 30.0, allowed_ids: Optional[set[int]] = None) -> list[TagObservation]:
+               min_decision_margin: float = 30.0, allowed_ids: set[int] | None = None) -> list[TagObservation]:
         gray = image if image.ndim == 2 else cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         det = _detector(self.family, self.nthreads)
         best: dict[int, TagObservation] = {}
@@ -62,7 +62,7 @@ class TagDetector:
         return list(best.values())
 
 
-_FRAME_RE = re.compile(r"^(\d+)\.(jpg|jpeg|png)$", re.I)
+_FRAME_RE = re.compile(r"^(\d+)\.(jpg|jpeg|png)$", re.IGNORECASE)
 
 
 def list_views(views_dir: Path) -> list[tuple[str, int, str]]:
@@ -77,8 +77,8 @@ def list_views(views_dir: Path) -> list[tuple[str, int, str]]:
 
 
 def detect_in_directory(views_dir: Path, family: str, min_decision_margin: float,
-                        allowed_ids: Optional[set[int]] = None,
-                        on_progress: Optional[Callable[[int, int], None]] = None,
+                        allowed_ids: set[int] | None = None,
+                        on_progress: Callable[[int, int], None] | None = None,
                         threads: int = 4) -> list[TagObservation]:
     """Detect tags in every view. pupil-apriltags releases the GIL, so threads scale well."""
     views = list_views(Path(views_dir))

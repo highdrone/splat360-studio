@@ -3,14 +3,13 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 
 SH_C0 = 0.28209479177387814
 
 
-def write_gaussian_ply(path: Path, xyz: np.ndarray, f_dc: np.ndarray, f_rest: Optional[np.ndarray],
+def write_gaussian_ply(path: Path, xyz: np.ndarray, f_dc: np.ndarray, f_rest: np.ndarray | None,
                        opacity: np.ndarray, scale: np.ndarray, rot: np.ndarray) -> None:
     n = len(xyz)
     n_rest = 0 if f_rest is None else f_rest.shape[1]

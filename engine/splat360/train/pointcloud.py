@@ -7,8 +7,8 @@ on machines without a GPU trainer, and it doubles as the instant preview.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 import numpy as np
 
@@ -22,12 +22,12 @@ class PointCloudTrainer(Trainer):
     name = "mock"
     label = "Point cloud preview (no training)"
 
-    def executable(self) -> Optional[str]:
+    def executable(self) -> str | None:
         return "builtin"
 
     def train(self, dataset_dir: Path, out_dir: Path, settings: TrainSettings, *, cancel=None,
-              on_progress: Optional[ProgressCb] = None, log: Optional[Callable[[str], None]] = None,
-              metrics: Optional[Callable[[dict], None]] = None) -> TrainReport:
+              on_progress: ProgressCb | None = None, log: Callable[[str], None] | None = None,
+              metrics: Callable[[dict], None] | None = None) -> TrainReport:
         t0 = time.time()
         out_dir.mkdir(parents=True, exist_ok=True)
         model = read_model(dataset_dir / "sparse" / "0")

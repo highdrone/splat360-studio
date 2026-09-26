@@ -1,14 +1,18 @@
-import io
 import shutil
 import subprocess
-from pathlib import Path
 
 import cv2
 import numpy as np
 import pytest
 
 from splat360.models import TagPlanRequest, TagSheetRequest
-from splat360.tags.detect import TagDetector, detect_in_directory, load_observations, save_observations, summarize
+from splat360.tags.detect import (
+    TagDetector,
+    detect_in_directory,
+    load_observations,
+    save_observations,
+    summarize,
+)
 from splat360.tags.families import get_family, list_families
 from splat360.tags.plan import max_tag_size_for_printer, plan_tags
 from splat360.tags.sheet import quiet_cells_for, render_tag_sheet, sheet_layout
