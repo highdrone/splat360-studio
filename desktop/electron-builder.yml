@@ -1,0 +1,81 @@
+# electron-builder configuration for Splat360 Studio (macOS).
+#
+#   npm run dist          # DMG + zip for arm64 in desktop/release/
+#   npm run dist:dir      # unpacked .app only (fast, for local testing)
+#
+# Notarization is opt-in. Export APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD and
+# APPLE_TEAM_ID (plus a Developer ID certificate in the keychain or
+# CSC_LINK/CSC_KEY_PASSWORD) and run
+#   npx electron-builder --mac --config.mac.notarize=true
+# scripts/build-mac.sh does this automatically when those variables are set.
+# Unsigned builds are usable after `xattr -dr com.apple.quarantine "/Applications/Splat360 Studio.app"`.
+
+appId: studio.splat360.app
+productName: Splat360 Studio
+copyright: Copyright © 2026 Splat360 contributors
+artifactName: "${productName}-${version}-${arch}.${ext}"
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - dist/**/*
+  - src/**/*.html
+  - package.json
+  - "!**/__tests__/**"
+  - "!**/*.map"
+
+extraResources:
+  # The Python engine sources. The first launch creates a venv from them.
+  - from: ../engine
+    to: engine
+    filter:
+      - "**/*"
+      - "!.venv/**"
+      - "!**/__pycache__/**"
+      - "!**/*.pyc"
+      - "!tests/**"
+      - "!**/*.egg-info/**"
+      - "!.pytest_cache/**"
+      - "!.ruff_cache/**"
+      - "!.mypy_cache/**"
+  # The built web UI.
+  - from: ../frontend/dist
+    to: frontend/dist
+
+asar: true
+
+mac:
+  category: public.app-category.graphics-design
+  icon: resources/icon.png            # electron-builder generates icon.icns from this
+  minimumSystemVersion: "14.0"
+  darkModeSupport: true
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  notarize: false                     # override: --config.mac.notarize=true
+  target:
+    - target: dmg
+      arch: [arm64]
+    - target: zip
+      arch: [arm64]
+    # Intel builds are possible but untested; append x64 to `arch` above,
+    # or run: npx electron-builder --mac --x64
+  extendInfo:
+    NSCameraUsageDescription: Not used.
+    NSMicrophoneUsageDescription: Not used.
+    LSMinimumSystemVersion: "14.0"
+
+dmg:
+  sign: false
+  contents:
+    - x: 140
+      y: 180
+    - x: 420
+      y: 180
+      type: link
+      path: /Applications
+
+publish: null

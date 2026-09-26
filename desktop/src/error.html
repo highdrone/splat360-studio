@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'" />
+  <title>Splat360 Studio – Engine error</title>
+  <style>
+    :root { color-scheme: light dark; --fg: #e6e6e6; --bg: #17181b; --muted: #9a9ca3; --accent: #4fd1c5; --err: #ff6b6b; }
+    @media (prefers-color-scheme: light) { :root { --fg: #1b1b1f; --bg: #f5f5f7; --muted: #5c5f66; } }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 13px -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; }
+    body { display: flex; flex-direction: column; padding: 18px 20px 16px; box-sizing: border-box; -webkit-app-region: drag; }
+    h1 { font-size: 15px; margin: 0 0 4px; font-weight: 600; color: var(--err); }
+    p { margin: 0 0 10px; color: var(--muted); white-space: pre-wrap; }
+    small { color: var(--muted); font-family: ui-monospace, Menlo, monospace; }
+    pre { flex: 1; margin: 8px 0 12px; padding: 10px; overflow: auto; background: rgba(127,127,127,0.12); border-radius: 6px; font: 11px ui-monospace, Menlo, monospace; white-space: pre-wrap; word-break: break-all; -webkit-app-region: no-drag; }
+    .row { display: flex; gap: 8px; justify-content: flex-end; -webkit-app-region: no-drag; }
+    button { font: inherit; padding: 5px 14px; border-radius: 6px; border: 1px solid rgba(127,127,127,0.4); background: transparent; color: var(--fg); cursor: pointer; }
+    button.primary { background: var(--accent); border-color: var(--accent); color: #062b28; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1 id="title">The engine could not be started</h1>
+  <p id="message"></p>
+  <small id="path"></small>
+  <pre id="log"></pre>
+  <div class="row">
+    <button id="show">Show log in Finder</button>
+    <button id="copy">Copy log</button>
+    <button id="retry" class="primary">Try again</button>
+    <button id="quit">Quit</button>
+  </div>
+  <script>
+    const $ = (id) => document.getElementById(id);
+    window.shell.onState((s) => {
+      if (s.title) $("title").textContent = s.title;
+      $("message").textContent = s.message || "";
+      $("path").textContent = s.logPath ? `Log: ${s.logPath}` : "";
+      $("log").textContent = s.logTail || "(log is empty)";
+      $("log").scrollTop = $("log").scrollHeight;
+    });
+    $("copy").onclick = async () => {
+      const ok = await window.shell.copyLog();
+      $("copy").textContent = ok ? "Copied" : "Copy failed";
+      setTimeout(() => ($("copy").textContent = "Copy log"), 1500);
+    };
+    $("show").onclick = () => window.shell.showLog();
+    $("retry").onclick = () => window.shell.retry();
+    $("quit").onclick = () => window.shell.quit();
+  </script>
+</body>
+</html>

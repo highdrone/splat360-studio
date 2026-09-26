@@ -1,0 +1,179 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark theme (default) — values are RGB triplets for Tailwind alpha support. */
+  --c-bg: 15 17 21;
+  --c-panel: 24 27 33;
+  --c-panel2: 32 36 44;
+  --c-line: 48 53 63;
+  --c-ink: 230 233 238;
+  --c-muted: 150 158 172;
+  --c-faint: 96 104 118;
+  --c-accent: 99 160 255;
+  --c-accent-ink: 12 20 36;
+  --c-ok: 74 201 129;
+  --c-warn: 240 180 60;
+  --c-danger: 240 92 92;
+  --c-info: 110 178 255;
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --c-bg: 244 245 247;
+  --c-panel: 255 255 255;
+  --c-panel2: 241 243 246;
+  --c-line: 220 224 230;
+  --c-ink: 24 28 36;
+  --c-muted: 88 96 110;
+  --c-faint: 150 158 172;
+  --c-accent: 30 110 235;
+  --c-accent-ink: 255 255 255;
+  --c-ok: 22 150 80;
+  --c-warn: 190 130 20;
+  --c-danger: 210 50 50;
+  --c-info: 30 110 235;
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-bg text-ink font-sans text-[13px] leading-5 antialiased;
+  overscroll-behavior: none;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--c-line)) transparent;
+}
+
+*:focus-visible {
+  outline: 2px solid rgb(var(--c-accent));
+  outline-offset: 1px;
+  border-radius: 4px;
+}
+
+@layer components {
+  .panel {
+    @apply bg-panel border border-line rounded-md shadow-panel;
+  }
+  .panel-title {
+    @apply text-xs font-semibold uppercase tracking-wide text-muted;
+  }
+  .btn {
+    @apply inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[13px] font-medium leading-4 transition-colors disabled:opacity-50 disabled:cursor-not-allowed select-none whitespace-nowrap;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-accent-ink border-accent hover:brightness-110;
+  }
+  .btn-secondary {
+    @apply btn bg-panel2 text-ink border-line hover:bg-line/60;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-muted border-transparent hover:bg-panel2 hover:text-ink;
+  }
+  .btn-danger {
+    @apply btn bg-danger/15 text-danger border-danger/40 hover:bg-danger/25;
+  }
+  .btn-sm {
+    @apply px-2 py-1 text-xs;
+  }
+  .btn-icon {
+    @apply btn p-1.5;
+  }
+  .input {
+    @apply w-full rounded-md border border-line bg-bg px-2 py-1.5 text-[13px] text-ink placeholder:text-faint focus:border-accent disabled:opacity-60 disabled:cursor-not-allowed;
+  }
+  .select {
+    @apply input appearance-none pr-7 bg-no-repeat;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");
+    background-position: right 8px center;
+  }
+  .label {
+    @apply block text-xs font-medium text-muted mb-1;
+  }
+  .help {
+    @apply text-2xs text-faint mt-1 leading-4;
+  }
+  .kbd {
+    @apply inline-block rounded border border-line bg-panel2 px-1 font-mono text-2xs text-muted;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-line bg-panel2 px-2 py-0.5 text-2xs text-muted;
+  }
+  .code {
+    @apply font-mono text-xs bg-panel2 border border-line rounded px-1.5 py-0.5 text-ink break-all;
+  }
+  .tab {
+    @apply px-3 py-2 text-[13px] font-medium text-muted border-b-2 border-transparent hover:text-ink -mb-px whitespace-nowrap;
+  }
+  .tab-active {
+    @apply text-ink border-accent;
+  }
+  .table {
+    @apply w-full text-[13px];
+  }
+  .table th {
+    @apply text-left text-2xs font-semibold uppercase tracking-wide text-muted px-2 py-1.5 border-b border-line;
+  }
+  .table td {
+    @apply px-2 py-1.5 border-b border-line/60 align-top;
+  }
+  .switch {
+    @apply relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border border-line bg-panel2 transition-colors;
+  }
+  .switch[aria-checked='true'] {
+    @apply bg-accent border-accent;
+  }
+  .switch-knob {
+    @apply inline-block h-3.5 w-3.5 translate-x-0.5 rounded-full bg-ink transition-transform;
+  }
+  .switch[aria-checked='true'] .switch-knob {
+    @apply translate-x-[18px] bg-accent-ink;
+  }
+  .progress {
+    @apply h-1.5 w-full overflow-hidden rounded-full bg-line/70;
+  }
+  .progress > div {
+    @apply h-full rounded-full bg-accent transition-[width] duration-300;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes stripes {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 24px 0;
+  }
+}
+
+.progress-indeterminate > div {
+  width: 100% !important;
+  background-image: linear-gradient(
+    90deg,
+    rgb(var(--c-accent) / 0.35) 0,
+    rgb(var(--c-accent) / 0.35) 50%,
+    rgb(var(--c-accent)) 50%,
+    rgb(var(--c-accent)) 100%
+  );
+  background-size: 24px 100%;
+  animation: stripes 0.8s linear infinite;
+}
+
+.log-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+}

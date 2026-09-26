@@ -1,0 +1,31 @@
+{
+  "name": "splat360-studio",
+  "productName": "Splat360 Studio",
+  "version": "1.0.0",
+  "description": "macOS desktop shell for Splat360 Studio: Insta360 X6 360 video to 3D Gaussian splats.",
+  "private": true,
+  "license": "MIT",
+  "author": "Splat360 contributors",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "dev": "npm run build && SPLAT360_DEV=1 electron .",
+    "start": "npm run build && electron .",
+    "dist": "npm --prefix ../frontend run build && npm run build && electron-builder --mac",
+    "dist:dir": "npm --prefix ../frontend run build && npm run build && electron-builder --mac --dir",
+    "icon": "node resources/make-icon.js",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "typescript": "^5.7.2",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
